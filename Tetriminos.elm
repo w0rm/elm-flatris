@@ -1,9 +1,9 @@
 module Tetriminos (fromChar) where
-import Types exposing (Grid)
 import Array
+import Grid exposing (Grid)
 
 
-fromChar : Char -> Grid
+fromChar : Char -> Grid String
 fromChar name =
   case name of
     'I' ->
