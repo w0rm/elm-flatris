@@ -239,6 +239,5 @@ view address model =
     [ renderWell model
     , renderPanel model
     , renderInfo
-    , renderControls
     ]
   ]

@@ -22,8 +22,8 @@ get x y grid =
 
 
 height : Grid a -> Int
-height grid =
-  Array.length grid
+height =
+  Array.length
 
 
 width : Grid a -> Int

@@ -13,7 +13,7 @@ import View
 initialModel : Model
 initialModel =
   { active = Tetriminos.fromChar 'I'
-  , activePosition = (0.0, 0.0)
+  , activePosition = (0, 0)
   , grid = Grid.make 10 20 (\_ _ -> Nothing)
   , lines = 0
   , next = Tetriminos.fromChar 'L'
