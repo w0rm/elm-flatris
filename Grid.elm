@@ -1,8 +1,13 @@
-module Grid (Grid, map, make, rotate, stamp, collide, mapToList, substract) where
+module Grid (Grid, fromList, map, make, rotate, stamp, collide, mapToList, substract) where
 import Array exposing (Array)
 
 
 type alias Grid a = Array (Array (Maybe a))
+
+
+fromList : List (List (Maybe a)) -> Grid a
+fromList listOfLists =
+  List.map Array.fromList listOfLists |> Array.fromList
 
 
 map : (a -> b) -> Grid a -> Grid b
