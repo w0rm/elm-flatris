@@ -1,6 +1,7 @@
 module View (view) where
 import Html exposing (div, Html, text, button)
 import Html.Attributes exposing (style)
+import Html.Events exposing (onClick)
 import Markdown
 import Model exposing (Model)
 import Actions exposing (Action)
@@ -12,7 +13,7 @@ import Grid exposing (Grid)
 
 
 renderBox : Int -> Int -> String -> Html
-renderBox y x c =
+renderBox x y c =
   div
   [ style
     [ "background" => c
@@ -27,23 +28,23 @@ renderBox y x c =
 
 renderBoxes : Grid String -> List Html
 renderBoxes grid =
-    Grid.mapToList renderBox grid
+  Grid.mapToList renderBox grid
 
 
-renderTetrimino : (Float, Float) -> Grid String -> Html
+renderTetrimino : (Int, Float) -> Grid String -> Html
 renderTetrimino coords grid =
   div
   [ style
     [ "left" => (toString (fst coords * 30) ++ "px")
     , "position" => "absolute"
-    , "top" => (toString (snd coords * 30) ++ "px")
+    , "top" => (toString (floor (snd coords) * 30) ++ "px")
     ]
   ]
   (renderBoxes grid)
 
 
-renderWell : Model -> Html
-renderWell model =
+renderWell : Signal.Address Action -> Model -> Html
+renderWell address model =
   div
   [ style
     [ "background" => "#ecf0f1"
@@ -97,33 +98,40 @@ renderCount n =
   [ toString n |> text ]
 
 
-renderGameButton : String -> Html
-renderGameButton txt =
-  button
-  [ style
-    [ "background" => "#34495f"
-    , "border" => "0"
-    , "bottom" => "30px"
-    , "color" => "#fff"
-    , "cursor" => "pointer"
-    , "display" => "block"
-    , "font-family" => "Helvetica, Arial, sans-serif"
-    , "font-size" => "18px"
-    , "font-weight" => "300"
-    , "height" => "60px"
-    , "left" => "30px"
-    , "line-height" => "60px"
-    , "outline" => "none"
-    , "padding" => "0"
-    , "position" => "absolute"
-    , "width" => "120px"
+renderGameButton : Signal.Address Action -> Model.State -> Html
+renderGameButton address state =
+  let
+    (txt, action) = case state of
+      Model.Stopped -> ("New game", Actions.Start)
+      Model.Playing -> ("Pause", Actions.Pause)
+      Model.Paused -> ("Resume", Actions.Resume)
+  in
+    button
+    [ style
+      [ "background" => "#34495f"
+      , "border" => "0"
+      , "bottom" => "30px"
+      , "color" => "#fff"
+      , "cursor" => "pointer"
+      , "display" => "block"
+      , "font-family" => "Helvetica, Arial, sans-serif"
+      , "font-size" => "18px"
+      , "font-weight" => "300"
+      , "height" => "60px"
+      , "left" => "30px"
+      , "line-height" => "60px"
+      , "outline" => "none"
+      , "padding" => "0"
+      , "position" => "absolute"
+      , "width" => "120px"
+      ]
+    , onClick address action
     ]
-  ]
-  [ text txt ]
+    [ text txt ]
 
 
-renderPanel : Model -> Html
-renderPanel model =
+renderPanel : Signal.Address Action -> Model -> Html
+renderPanel address model =
   div
   [ style
     [ "bottom" => "80px"
@@ -150,7 +158,7 @@ renderPanel model =
       ]
     ]
     (Grid.map (\_ -> "#ecf0f1") model.next |> renderBoxes)
-  , renderGameButton "New game"
+  , renderGameButton address model.state
   ]
 
 
@@ -177,6 +185,7 @@ renderControlButton txt =
   ]
   [ text txt ]
 
+
 renderControls : Html
 renderControls =
   div
@@ -194,8 +203,8 @@ renderControls =
   ]
 
 
-renderInfo : Html
-renderInfo =
+renderInfo : Model.State -> Html
+renderInfo state =
   div
   [ style
     [ "background" => "rgba(236, 240, 241, 0.85)"
@@ -209,6 +218,7 @@ renderInfo =
     , "position" => "absolute"
     , "top" => "0"
     , "width" => "270px"
+    , "display" => (if state == Model.Playing then "none" else "block")
     ]
   ] [
     Markdown.toHtml """
@@ -236,8 +246,8 @@ view address model =
       , "width" => "480px"
       ]
     ]
-    [ renderWell model
-    , renderPanel model
-    , renderInfo
+    [ renderWell address model
+    , renderPanel address model
+    , renderInfo model.state
     ]
   ]

@@ -1,3 +1,11 @@
-module Actions where
+module Actions (Action(..)) where
+import Time exposing (Time)
 
-type Action = Live | Die
+type Action
+  = Start
+  | Pause
+  | Resume
+  | Tick Time
+  | Move Int
+  | Rotate
+  | Accelerate Bool

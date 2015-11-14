@@ -1,6 +1,20 @@
-module Tetriminos (fromChar) where
-import Array
+module Tetriminos (fromChar, random) where
 import Grid exposing (Grid)
+import Array exposing (Array)
+import Random
+
+
+letters : Array Char
+letters = Array.fromList ['I', 'O', 'T', 'J', 'L', 'S', 'Z']
+
+
+random : Random.Seed -> (Grid String, Random.Seed)
+random seed =
+  let
+    (i, seed') = Random.generate (Random.float 0 6) seed
+    char = Maybe.withDefault 'I' (Array.get (floor i) letters)
+  in
+    (fromChar char, seed')
 
 
 fromChar : Char -> Grid String

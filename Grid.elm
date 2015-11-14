@@ -1,4 +1,4 @@
-module Grid (Grid, fromList, map, make, rotate, stamp, collide, mapToList, substract) where
+module Grid (Grid, fromList, map, make, rotate, stamp, collide, mapToList, clearLines) where
 import Array exposing (Array)
 
 
@@ -22,8 +22,10 @@ make w h f =
 
 get : Int -> Int -> Grid a -> Maybe a
 get x y grid =
-  let row = Maybe.withDefault Array.empty (Array.get y grid)
-  in Maybe.withDefault Nothing (Array.get x row)
+  let
+    row = Maybe.withDefault Array.empty (Array.get y grid)
+  in
+    Maybe.withDefault Nothing (Array.get x row)
 
 
 height : Grid a -> Int
@@ -55,45 +57,52 @@ stamp x y sample grid =
   let
     fn x' y' =
       Maybe.oneOf
-        [ get (x' - y) (y' - y) sample
+        [ get (x' - x) (y' - y) sample
         , get x' y' grid
         ]
   in
     make (width grid) (height grid) fn
 
 
+-- collides a positioned sample with a grid and its bounds
 collide : Int -> Int -> Grid a -> Grid a -> Bool
 collide x y sample grid =
   let
+    wid = width grid
+    hei = height grid
     collideCell x' y' _ =
-      case get (x' - x) (y' - y) sample of
-        Just value -> True
-        _ -> False
+      if (x' + x >= wid) || (x' + x < 0) || (y + y' >= hei) then
+        True
+      else
+        case get (x' + x) (y' + y) grid of
+          Just value -> True
+          Nothing -> False
   in
-    mapToList collideCell grid |> List.any identity
+    mapToList collideCell sample |> List.any identity
 
 
 mapToList : (Int -> Int -> a -> b) -> Grid a -> List b
 mapToList fun grid =
   let
-    processCell x (y, cell) =
+    processCell y (x, cell) =
       Maybe.map (fun x y) cell
-    processRow x row =
+    processRow y row =
       Array.toIndexedList row
-      |> List.filterMap (processCell x)
+      |> List.filterMap (processCell y)
   in
     Array.indexedMap processRow grid
     |> Array.toList
     |> List.concat
 
 
-substract : Grid a -> Grid a
-substract grid =
+clearLines : Grid a -> (Grid a, Int)
+clearLines grid =
   let
     hei = height grid
     wid = width grid
     keep row = List.any ((==) Nothing) (Array.toList row)
     grid' = Array.filter keep grid
-    add = make wid (hei - height grid') (\_ _ -> Nothing)
+    lines = hei - height grid'
+    add = make wid lines (\_ _ -> Nothing)
   in
-    Array.append add grid
+    (Array.append add grid', lines)
