@@ -5,7 +5,6 @@ import Effects exposing (Effects)
 import Tetriminos
 import Time exposing (Time)
 import Grid
-import Random
 
 
 update : Action -> Model -> (Model, Effects Action)
@@ -90,13 +89,15 @@ dropTetrimino model =
   in
     if Grid.collide x (floor y') model.active model.grid then
       let
-        (next, seed') = Tetriminos.random (Random.initialSeed prevClockTime)
+        score = List.length (Grid.mapToList (\_ _ _ -> True) model.active)
+        (next, seed') = Tetriminos.random model.seed
       in
         {model | grid <- Grid.stamp x (floor y) model.active model.grid
                , activePosition <- (0, 0)
                , active <- model.next
                , next <- next
                , seed <- seed'
+               , score <- model.score + score
                }
         |> clearLines
     else
@@ -110,7 +111,6 @@ clearLines model =
   in
     { model | grid <- grid
             , lines <- model.lines + lines
-            , score <- model.score + lines * 10
     }
 
 
