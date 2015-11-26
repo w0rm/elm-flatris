@@ -11,8 +11,8 @@ letters = Array.fromList ['I', 'O', 'T', 'J', 'L', 'S', 'Z']
 random : Random.Seed -> (Grid String, Random.Seed)
 random seed =
   let
-    (i, seed') = Random.generate (Random.float 0 6) seed
-    char = Maybe.withDefault 'I' (Array.get (floor i) letters)
+    (i, seed') = Random.generate (Random.int 0 6) seed
+    char = Maybe.withDefault 'I' (Array.get i letters)
   in
     (fromChar char, seed')
 
