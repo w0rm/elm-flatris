@@ -11,29 +11,29 @@ update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
     Start ->
-      ( { model | state <- Playing
-                , lines <- 0
-                , score <- 0
-                , grid <- Grid.make 10 20 (\_ _ -> Nothing)
+      ( { model | state = Playing
+                , lines = 0
+                , score = 0
+                , grid = Grid.make 10 20 (\_ _ -> Nothing)
                 }
-      , Effects.tick Tick)
+      , Effects.tick Tick
+      )
     Pause ->
-      ({model | state <- Paused}, Effects.none)
+      ({model | state = Paused}, Effects.none)
     Resume ->
-      ({model | state <- Playing}, Effects.tick Tick)
+      ({model | state = Playing}, Effects.tick Tick)
     Move dx ->
       (moveTetrimino dx model, Effects.none)
     Rotate ->
       (rotateTetrimino model, Effects.none)
     Accelerate on ->
-      ({model | acceleration <- on }, Effects.none)
+      ({model | acceleration = on }, Effects.none)
     Tick time ->
       if model.state == Playing then
-        ( animate {model | animationState <- (updateAnimationState time model.animationState)}
+        ( animate {model | animationState = (updateAnimationState time model.animationState)}
         , Effects.tick Tick)
       else
-        ({model | animationState <- Nothing}, Effects.none)
-    _ -> (model, Effects.none)
+        ({model | animationState = Nothing}, Effects.none)
 
 
 updateAnimationState : Time -> AnimationState -> AnimationState
@@ -54,7 +54,7 @@ moveTetrimino dx model =
     if Grid.collide x' (floor y) model.active model.grid then
       model
     else
-      {model | activePosition <- (x', y)}
+      {model | activePosition = (x', y)}
 
 
 rotateTetrimino : Model -> Model
@@ -66,7 +66,7 @@ rotateTetrimino model =
     if Grid.collide x (floor y) rotated model.grid then
       model
     else
-      {model | active <- rotated}
+      {model | active = rotated}
 
 
 checkEndGame : Model -> Model
@@ -75,7 +75,7 @@ checkEndGame model =
     check _ y _ = y == 0
   in
     if Grid.mapToList check model.grid |> List.any identity then
-      {model | state <- Stopped}
+      {model | state = Stopped}
     else
       model
 
@@ -92,16 +92,16 @@ dropTetrimino model =
         score = List.length (Grid.mapToList (\_ _ _ -> True) model.active)
         (next, seed') = Tetriminos.random model.seed
       in
-        {model | grid <- Grid.stamp x (floor y) model.active model.grid
-               , activePosition <- (0, 0)
-               , active <- model.next
-               , next <- next
-               , seed <- seed'
-               , score <- model.score + score
+        {model | grid = Grid.stamp x (floor y) model.active model.grid
+               , activePosition = (0, 0)
+               , active = model.next
+               , next = next
+               , seed = seed'
+               , score = model.score + score
                }
         |> clearLines
     else
-      {model | activePosition <- (x, y')}
+      {model | activePosition = (x, y')}
 
 
 clearLines : Model -> Model
@@ -109,8 +109,8 @@ clearLines model =
   let
     (grid, lines) = Grid.clearLines model.grid
   in
-    { model | grid <- grid
-            , lines <- model.lines + lines
+    { model | grid = grid
+            , lines = model.lines + lines
     }
 
 
