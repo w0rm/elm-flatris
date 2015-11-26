@@ -7,6 +7,11 @@ import Time exposing (Time)
 import Grid
 
 
+framesSince : Time -> Time -> Int
+framesSince prevTime time =
+  floor ((time - prevTime) * 60 / 1000)
+
+
 update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
@@ -30,19 +35,31 @@ update action model =
       ({model | acceleration = on }, Effects.none)
     Tick time ->
       if model.state == Playing then
-        ( animate {model | animationState = (updateAnimationState time model.animationState)}
-        , Effects.tick Tick)
+        (animate time model, Effects.tick Tick)
       else
         ({model | animationState = Nothing}, Effects.none)
 
 
-updateAnimationState : Time -> AnimationState -> AnimationState
-updateAnimationState time animationState =
-  case animationState of
-    Nothing ->
-      Just { prevClockTime = time, elapsedFrames = 0 }
-    Just {prevClockTime, elapsedFrames} ->
-      Just { prevClockTime = time, elapsedFrames = (time - prevClockTime) / 1000 * 60 }
+animate : Time -> Model -> Model
+animate time =
+  animateModel time >> dropTetrimino >> checkEndGame
+
+
+animateModel : Time -> Model -> Model
+animateModel time model =
+  let
+    animationState =
+      case model.animationState of
+        Nothing ->
+          Just { prevClockTime = time
+               , elapsedFrames = 0
+               }
+        Just {prevClockTime} ->
+          Just { prevClockTime = time
+               , elapsedFrames = framesSince prevClockTime time
+               }
+  in
+    {model | animationState = animationState}
 
 
 moveTetrimino : Int -> Model -> Model
@@ -112,10 +129,3 @@ clearLines model =
     { model | grid = grid
             , lines = model.lines + lines
     }
-
-
-animate : Model -> Model
-animate model =
-  model
-  |> dropTetrimino
-  |> checkEndGame
