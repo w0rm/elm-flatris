@@ -101,7 +101,10 @@ dropTetrimino : Model -> Model
 dropTetrimino model =
   let
     (x, y) = model.activePosition
-    {prevClockTime, elapsedFrames} = Maybe.withDefault {prevClockTime=0, elapsedFrames=0} model.animationState
+    elapsedFrames =
+      case model.animationState of
+        Just {elapsedFrames} -> elapsedFrames
+        Nothing -> 0
     y' = y + elapsedFrames / (if model.acceleration then 1.5 else 48)
   in
     if Grid.collide x (floor y') model.active model.grid then
