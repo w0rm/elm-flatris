@@ -10,7 +10,6 @@ import Update
 import View
 import Actions
 import Keyboard
-import Time exposing (fps)
 
 
 initialModel : Model
