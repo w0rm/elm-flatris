@@ -7,9 +7,9 @@ import Time exposing (Time)
 import Grid
 
 
-framesSince : Time -> Time -> Int
+framesSince : Time -> Time -> Float
 framesSince prevTime time =
-  floor ((time - prevTime) * 60 / 1000)
+  (time - prevTime) * 60 / 1000
 
 
 update : Action -> Model -> (Model, Effects Action)
