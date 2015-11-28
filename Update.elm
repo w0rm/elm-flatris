@@ -28,9 +28,15 @@ update action model =
     Resume ->
       ({model | state = Playing}, Effects.tick Tick)
     Move dx ->
-      (moveTetrimino dx model, Effects.none)
-    Rotate ->
-      (rotateTetrimino model, Effects.none)
+      if dx /= 0 then
+        ({model | direction = Just {active = True, direction = dx, elapsedFrames = 0}}, Effects.none)
+      else
+        ({model | direction = Nothing}, Effects.none)
+    Rotate bool ->
+      if bool then
+        ({model | rotation = Just {active = True, elapsedFrames = 0}}, Effects.none)
+      else
+        ({model | rotation = Nothing}, Effects.none)
     Accelerate on ->
       ({model | acceleration = on }, Effects.none)
     Tick time ->
@@ -42,7 +48,11 @@ update action model =
 
 animate : Time -> Model -> Model
 animate time =
-  animateModel time >> dropTetrimino >> checkEndGame
+  animateModel time
+  >> moveTetrimino
+  >> rotateTetrimino
+  >> dropTetrimino
+  >> checkEndGame
 
 
 animateModel : Time -> Model -> Model
@@ -62,8 +72,31 @@ animateModel time model =
     {model | animationState = animationState}
 
 
-moveTetrimino : Int -> Model -> Model
-moveTetrimino dx model =
+moveTetrimino : Model -> Model
+moveTetrimino model =
+  let
+    updateFrames elapsedFrames direction =
+      let
+        elapsedFrames' = case model.animationState of
+          Just state -> elapsedFrames + state.elapsedFrames
+          Nothing -> elapsedFrames
+      in
+        if elapsedFrames' > 10 then
+          {model | direction = Just {active = True, direction = direction, elapsedFrames = 0}}
+        else
+          {model | direction = Just {active = False, direction = direction, elapsedFrames = elapsedFrames'}}
+  in
+    case model.direction of
+      Just {active, direction, elapsedFrames} ->
+        if active then
+          updateFrames elapsedFrames direction |> moveTetrimino' direction
+        else
+          updateFrames elapsedFrames direction
+      Nothing -> model
+
+
+moveTetrimino' : Int -> Model -> Model
+moveTetrimino' dx model =
   let
     (x, y) = model.activePosition
     x' = x + dx
@@ -76,6 +109,29 @@ moveTetrimino dx model =
 
 rotateTetrimino : Model -> Model
 rotateTetrimino model =
+  let
+    updateFrames elapsedFrames =
+      let
+        elapsedFrames' = case model.animationState of
+          Just state -> elapsedFrames + state.elapsedFrames
+          Nothing -> elapsedFrames
+      in
+        if elapsedFrames' > 30 then
+          {model | rotation = Just {active = True, elapsedFrames = 0}}
+        else
+          {model | rotation = Just {active = False, elapsedFrames = elapsedFrames'}}
+  in
+    case model.rotation of
+      Just {active, elapsedFrames} ->
+        if active then
+          updateFrames elapsedFrames |> rotateTetrimino'
+        else
+          updateFrames elapsedFrames
+      Nothing -> model
+
+
+rotateTetrimino' : Model -> Model
+rotateTetrimino' model =
   let
     (x, y) = model.activePosition
     rotated = Grid.rotate True model.active

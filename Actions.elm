@@ -7,5 +7,5 @@ type Action
   | Resume
   | Tick Time
   | Move Int
-  | Rotate
+  | Rotate Bool
   | Accelerate Bool

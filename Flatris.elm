@@ -10,7 +10,6 @@ import Update
 import View
 import Actions
 import Keyboard
-import Time exposing (fps)
 
 
 initialModel : Model
@@ -25,6 +24,8 @@ initialModel =
   , state = Model.Stopped
   , acceleration = False
   , animationState = Nothing
+  , rotation = Nothing
+  , direction = Nothing
   }
 
 
@@ -37,12 +38,10 @@ app =
     { init = (initialModel, Effects.none)
     , update = Update.update
     , view = View.view
-    , inputs = [
-        Signal.map .x Keyboard.arrows
-        |> Signal.filter (\x -> x /= 0) 0
-        |> Signal.map Actions.Move
-      , Signal.map (always Actions.Rotate) (Keyboard.isDown 38 |> Signal.filter identity False)
+    , inputs =
+      [ Signal.map Actions.Rotate (Keyboard.isDown 38)
       , Signal.map Actions.Accelerate (Keyboard.isDown 40)
+      , Signal.map .x Keyboard.arrows |> Signal.map Actions.Move
       ]
     }
 
