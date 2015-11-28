@@ -6,13 +6,13 @@ import Time exposing (Time)
 type State = Paused | Playing | Stopped
 
 type alias AnimationState =
-  Maybe { prevClockTime : Time, elapsedFrames : Int }
+  Maybe { prevClockTime : Time, elapsedFrames : Float }
 
 type alias RotationState =
-  Maybe { active : Bool, elapsedFrames : Int }
+  Maybe { active : Bool, elapsedFrames : Float }
 
 type alias DirectionState =
-  Maybe { active : Bool, direction : Int, elapsedFrames : Int }
+  Maybe { active : Bool, direction : Int, elapsedFrames : Float }
 
 type alias Model =
   { active : Grid String
