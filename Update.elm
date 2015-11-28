@@ -24,17 +24,27 @@ update action model =
       , Effects.tick Tick
       )
     Pause ->
-      ({model | state = Paused}, Effects.none)
+      ( {model | state = Paused}
+      , Effects.none
+      )
     Resume ->
-      ({model | state = Playing}, Effects.tick Tick)
+      ( {model | state = Playing}
+      , Effects.tick Tick
+      )
     Move dx ->
       if dx /= 0 then
-        ({model | direction = Just {active = True, direction = dx, elapsedFrames = 0}}, Effects.none)
+        ( {model | direction = Just {active = True, direction = dx, elapsedFrames = 0}}
+        , Effects.none
+        )
       else
-        ({model | direction = Nothing}, Effects.none)
+        ( {model | direction = Nothing}
+        , Effects.none
+        )
     Rotate bool ->
       if bool then
-        ({model | rotation = Just {active = True, elapsedFrames = 0}}, Effects.none)
+        ( {model | rotation = Just {active = True, elapsedFrames = 0}}
+        , Effects.none
+        )
       else
         ({model | rotation = Nothing}, Effects.none)
     Accelerate on ->
