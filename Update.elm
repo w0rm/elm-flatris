@@ -31,24 +31,30 @@ update action model =
       ( {model | state = Playing}
       , Effects.tick Tick
       )
-    Move dx ->
-      if dx /= 0 then
-        ( {model | direction = Just {active = True, direction = dx, elapsedFrames = 0}}
-        , Effects.none
-        )
-      else
-        ( {model | direction = Nothing}
-        , Effects.none
-        )
-    Rotate bool ->
-      if bool then
-        ( {model | rotation = Just {active = True, elapsedFrames = 0}}
-        , Effects.none
-        )
-      else
-        ({model | rotation = Nothing}, Effects.none)
+    Move 0 ->
+      ( {model | direction = Nothing}
+      , Effects.none
+      )
+    Move direction ->
+      ( { model | direction = Just { active = True
+                                   , direction = direction
+                                   , elapsedFrames = 0
+                                   }
+        }
+      , Effects.none
+      )
+    Rotate False ->
+      ( {model | rotation = Nothing}
+      , Effects.none
+      )
+    Rotate True ->
+      ( {model | rotation = Just {active = True, elapsedFrames = 0}}
+      , Effects.none
+      )
     Accelerate on ->
-      ({model | acceleration = on }, Effects.none)
+      ( {model | acceleration = on }
+      , Effects.none
+      )
     Tick time ->
       if model.state == Playing then
         (animate time model, Effects.tick Tick)
