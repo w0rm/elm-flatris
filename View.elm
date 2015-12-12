@@ -1,7 +1,7 @@
 module View (view) where
 import Html exposing (div, Html, text, button)
 import Html.Attributes exposing (style)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onMouseDown, onMouseUp)
 import Markdown
 import Model exposing (Model)
 import Actions exposing (Action)
@@ -162,10 +162,10 @@ renderPanel address model =
   ]
 
 
-renderControlButton : String -> Html
-renderControlButton txt =
+renderControlButton : String -> List Html.Attribute -> Html
+renderControlButton txt attrs =
   button
-  [ style
+  ( style
     [ "background" => "#ecf0f1"
     , "border" => "0"
     , "color" => "#34495f"
@@ -181,13 +181,13 @@ renderControlButton txt =
     , "outline" => "none"
     , "padding" => "0"
     , "width" => "60px"
-    ]
-  ]
+    ] :: attrs
+  )
   [ text txt ]
 
 
-renderControls : Html
-renderControls =
+renderControls : Signal.Address Action -> Html
+renderControls address =
   div
   [ style
     [ "height" => "80px"
@@ -196,10 +196,22 @@ renderControls =
     , "top" => "600px"
     ]
   ]
-  [ renderControlButton "↻"
-  , renderControlButton "←"
-  , renderControlButton "→"
-  , renderControlButton "↓"
+  [ renderControlButton "↻" [
+      onMouseDown address (Actions.Rotate True)
+    , onMouseUp address (Actions.Rotate False)
+    ]
+  , renderControlButton "←" [
+      onMouseDown address (Actions.Move -1)
+    , onMouseUp address (Actions.Move 0)
+    ]
+  , renderControlButton "→" [
+      onMouseDown address (Actions.Move 1)
+    , onMouseUp address (Actions.Move 0)
+    ]
+  , renderControlButton "↓" [
+      onMouseDown address (Actions.Accelerate True)
+    , onMouseUp address (Actions.Accelerate False)
+    ]
   ]
 
 
@@ -247,6 +259,7 @@ view address model =
       ]
     ]
     [ renderWell address model
+    , renderControls address
     , renderPanel address model
     , renderInfo model.state
     ]
