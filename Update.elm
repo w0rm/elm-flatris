@@ -63,52 +63,30 @@ update action model =
 
 
 animate : Time -> Model -> Model
-animate time =
-  animateModel time
-  >> moveTetrimino
-  >> rotateTetrimino
-  >> dropTetrimino
-  >> checkEndGame
-
-
-animateModel : Time -> Model -> Model
-animateModel time model =
+animate time model =
   let
-    animationState =
+    elapsedFrames =
       case model.animationState of
         Nothing ->
-          Just { prevClockTime = time
-               , elapsedFrames = 0
-               }
+          0
         Just {prevClockTime} ->
-          Just { prevClockTime = time
-               , elapsedFrames = framesSince prevClockTime time
-               }
+          framesSince prevClockTime time
+    animationState = Just {prevClockTime = time, elapsedFrames = elapsedFrames}
   in
     {model | animationState = animationState}
+    |> moveTetrimino elapsedFrames
+    |> rotateTetrimino elapsedFrames
+    |> dropTetrimino elapsedFrames
+    |> checkEndGame
 
 
-moveTetrimino : Model -> Model
-moveTetrimino model =
-  let
-    updateFrames elapsedFrames direction =
-      let
-        elapsedFrames' = case model.animationState of
-          Just state -> elapsedFrames + state.elapsedFrames
-          Nothing -> elapsedFrames
-      in
-        if elapsedFrames' > 10 then
-          {model | direction = Just {active = True, direction = direction, elapsedFrames = 0}}
-        else
-          {model | direction = Just {active = False, direction = direction, elapsedFrames = elapsedFrames'}}
-  in
-    case model.direction of
-      Just {active, direction, elapsedFrames} ->
-        if active then
-          updateFrames elapsedFrames direction |> moveTetrimino' direction
-        else
-          updateFrames elapsedFrames direction
-      Nothing -> model
+moveTetrimino : Float -> Model -> Model
+moveTetrimino elapsedFrames model =
+  case model.direction of
+    Just state ->
+      {model | direction = Just (updateFrames 10 elapsedFrames state)}
+      |> (if state.active then moveTetrimino' state.direction else identity)
+    Nothing -> model
 
 
 moveTetrimino' : Int -> Model -> Model
@@ -123,27 +101,24 @@ moveTetrimino' dx model =
       {model | activePosition = (x', y)}
 
 
-rotateTetrimino : Model -> Model
-rotateTetrimino model =
+updateFrames : Float -> Float -> {a | active: Bool, elapsedFrames: Float} -> {a | active: Bool, elapsedFrames: Float}
+updateFrames limit elapsedFrames state =
   let
-    updateFrames elapsedFrames =
-      let
-        elapsedFrames' = case model.animationState of
-          Just state -> elapsedFrames + state.elapsedFrames
-          Nothing -> elapsedFrames
-      in
-        if elapsedFrames' > 30 then
-          {model | rotation = Just {active = True, elapsedFrames = 0}}
-        else
-          {model | rotation = Just {active = False, elapsedFrames = elapsedFrames'}}
+    elapsedFrames' = state.elapsedFrames + elapsedFrames
   in
-    case model.rotation of
-      Just {active, elapsedFrames} ->
-        if active then
-          updateFrames elapsedFrames |> rotateTetrimino'
-        else
-          updateFrames elapsedFrames
-      Nothing -> model
+    if elapsedFrames' > limit then
+      {state | active = True, elapsedFrames = elapsedFrames' - limit}
+    else
+      {state | active = False, elapsedFrames = elapsedFrames'}
+
+
+rotateTetrimino : Float -> Model -> Model
+rotateTetrimino elapsedFrames model =
+  case model.rotation of
+    Just rotation ->
+      {model | rotation = Just (updateFrames 30 elapsedFrames rotation)}
+      |> (if rotation.active then rotateTetrimino' else identity)
+    Nothing -> model
 
 
 rotateTetrimino' : Model -> Model
@@ -179,14 +154,10 @@ checkEndGame model =
       model
 
 
-dropTetrimino : Model -> Model
-dropTetrimino model =
+dropTetrimino : Float -> Model -> Model
+dropTetrimino elapsedFrames model =
   let
     (x, y) = model.activePosition
-    elapsedFrames =
-      case model.animationState of
-        Just {elapsedFrames} -> elapsedFrames
-        Nothing -> 0
     y' = y + elapsedFrames / (if model.acceleration then 1.5 else 48)
   in
     if Grid.collide x (floor y') model.active model.grid then
