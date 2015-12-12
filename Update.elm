@@ -151,11 +151,17 @@ rotateTetrimino' model =
   let
     (x, y) = model.activePosition
     rotated = Grid.rotate True model.active
+    shiftPosition deltas =
+      case deltas of
+        dx :: remainingDeltas ->
+          if Grid.collide (x + dx) (floor y) rotated model.grid then
+            shiftPosition remainingDeltas
+          else
+            {model | active = rotated, activePosition = (x + dx, y)}
+        [] ->
+          model
   in
-    if Grid.collide x (floor y) rotated model.grid then
-      model
-    else
-      {model | active = rotated}
+    shiftPosition [0, 1, -1, 2, -2]
 
 
 checkEndGame : Model -> Model
