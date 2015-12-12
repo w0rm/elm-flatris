@@ -14,7 +14,7 @@ import Keyboard
 
 initialModel : Model
 initialModel =
-  { active = Tetriminos.fromChar 'I'
+  { active = Tetriminos.fromChar 'T'
   , activePosition = (0, 0)
   , grid = Grid.make 10 20 (\_ _ -> Nothing)
   , lines = 0

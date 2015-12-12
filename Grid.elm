@@ -1,4 +1,4 @@
-module Grid (Grid, fromList, map, make, rotate, stamp, collide, mapToList, clearLines) where
+module Grid (Grid, fromList, map, make, rotate, stamp, collide, mapToList, clearLines, massCenter) where
 import Array exposing (Array)
 
 
@@ -46,8 +46,8 @@ rotate clockwise grid =
     hei = height grid
     fn x y =
       if clockwise
-        then get y (wid - x - 1) grid
-        else get (hei - y - 1) x grid
+        then get y (hei - x - 1) grid
+        else get (wid - y - 1) x grid
   in
     make hei wid fn
 
@@ -106,3 +106,13 @@ clearLines grid =
     add = make wid lines (\_ _ -> Nothing)
   in
     (Array.append add grid', lines)
+
+
+massCenter : Grid a -> (Int, Int)
+massCenter grid =
+  let
+    boxes = mapToList (\x y _ -> (toFloat x, toFloat y)) grid
+    len = toFloat (List.length boxes)
+    (x, y) = List.unzip boxes
+  in
+    (round (List.sum x / len), round (List.sum y / len))

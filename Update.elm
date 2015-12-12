@@ -151,13 +151,17 @@ rotateTetrimino' model =
   let
     (x, y) = model.activePosition
     rotated = Grid.rotate True model.active
+    centerBefore = Grid.massCenter model.active
+    centerAfter = Grid.massCenter rotated
+    newX = fst centerBefore - fst centerAfter + x
+    newY = toFloat (snd centerBefore - snd centerAfter) + y
     shiftPosition deltas =
       case deltas of
         dx :: remainingDeltas ->
-          if Grid.collide (x + dx) (floor y) rotated model.grid then
+          if Grid.collide (newX + dx) (floor newY) rotated model.grid then
             shiftPosition remainingDeltas
           else
-            {model | active = rotated, activePosition = (x + dx, y)}
+            {model | active = rotated, activePosition = (newX + dx, newY)}
         [] ->
           model
   in
