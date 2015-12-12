@@ -2,7 +2,8 @@ module Actions (Action(..)) where
 import Time exposing (Time)
 
 type Action
-  = Start
+  = Init Time
+  | Start
   | Pause
   | Resume
   | Tick Time

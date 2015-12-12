@@ -5,7 +5,7 @@ import Effects exposing (Effects)
 import Tetriminos
 import Time exposing (Time)
 import Grid
-
+import Random
 
 framesSince : Time -> Time -> Float
 framesSince prevTime time =
@@ -15,6 +15,20 @@ framesSince prevTime time =
 update : Action -> Model -> (Model, Effects Action)
 update action model =
   case action of
+    Init time ->
+      let
+        initialSeed = Random.initialSeed (floor time)
+        (active, seed') = Tetriminos.random initialSeed
+        (next, seed) = Tetriminos.random seed'
+        (dx, _) = Grid.centerOfMass active
+      in
+        ( { model | seed = seed
+                  , active = active
+                  , activePosition = (Grid.width model.grid // 2 - dx, 0)
+                  , next = next
+          }
+        , Effects.none
+        )
     Start ->
       ( { model | state = Playing
                 , lines = 0
@@ -164,9 +178,10 @@ dropTetrimino elapsedFrames model =
       let
         score = List.length (Grid.mapToList (\_ _ _ -> True) model.active)
         (next, seed') = Tetriminos.random model.seed
+        (dx, _) = Grid.centerOfMass model.next
       in
         {model | grid = Grid.stamp x (floor y) model.active model.grid
-               , activePosition = (0, 0)
+               , activePosition = (Grid.width model.grid // 2 - dx, 0)
                , active = model.next
                , next = next
                , seed = seed'

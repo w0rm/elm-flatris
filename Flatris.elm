@@ -5,7 +5,6 @@ import Model exposing (Model)
 import Random
 import StartApp
 import Task
-import Tetriminos
 import Update
 import View
 import Actions
@@ -14,13 +13,13 @@ import Keyboard
 
 initialModel : Model
 initialModel =
-  { active = Tetriminos.fromChar 'T'
+  { active = Grid.fromList []
   , activePosition = (0, 0)
   , grid = Grid.make 10 20 (\_ _ -> Nothing)
   , lines = 0
-  , next = Tetriminos.fromChar 'O'
+  , next = Grid.fromList []
   , score = 0
-  , seed = Random.initialSeed 31415
+  , seed = Random.initialSeed 0
   , state = Model.Stopped
   , acceleration = False
   , animationState = Nothing
@@ -35,7 +34,7 @@ app : { html : Signal Html
       }
 app =
   StartApp.start
-    { init = (initialModel, Effects.none)
+    { init = (initialModel, Effects.tick Actions.Init)
     , update = Update.update
     , view = View.view
     , inputs =

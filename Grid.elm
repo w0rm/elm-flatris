@@ -1,4 +1,4 @@
-module Grid (Grid, fromList, map, make, rotate, stamp, collide, mapToList, clearLines, centerOfMass) where
+module Grid (Grid, fromList, map, make, rotate, stamp, collide, mapToList, clearLines, centerOfMass, width, height) where
 import Array exposing (Array)
 
 
@@ -45,9 +45,10 @@ rotate clockwise grid =
     wid = width grid
     hei = height grid
     fn x y =
-      if clockwise
-        then get y (hei - x - 1) grid
-        else get (wid - y - 1) x grid
+      if clockwise then
+        get y (hei - x - 1) grid
+      else
+        get (wid - y - 1) x grid
   in
     make hei wid fn
 
@@ -87,8 +88,7 @@ mapToList fun grid =
     processCell y (x, cell) =
       Maybe.map (fun x y) cell
     processRow y row =
-      Array.toIndexedList row
-      |> List.filterMap (processCell y)
+      List.filterMap (processCell y) (Array.toIndexedList row)
   in
     Array.indexedMap processRow grid
     |> Array.toList
@@ -98,12 +98,10 @@ mapToList fun grid =
 clearLines : Grid a -> (Grid a, Int)
 clearLines grid =
   let
-    hei = height grid
-    wid = width grid
     keep row = List.any ((==) Nothing) (Array.toList row)
     grid' = Array.filter keep grid
-    lines = hei - height grid'
-    add = make wid lines (\_ _ -> Nothing)
+    lines = height grid - height grid'
+    add = make (width grid) lines (\_ _ -> Nothing)
   in
     (Array.append add grid', lines)
 
