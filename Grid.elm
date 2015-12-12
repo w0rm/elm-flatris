@@ -1,4 +1,4 @@
-module Grid (Grid, fromList, map, make, rotate, stamp, collide, mapToList, clearLines, massCenter) where
+module Grid (Grid, fromList, map, make, rotate, stamp, collide, mapToList, clearLines, centerOfMass) where
 import Array exposing (Array)
 
 
@@ -108,8 +108,8 @@ clearLines grid =
     (Array.append add grid', lines)
 
 
-massCenter : Grid a -> (Int, Int)
-massCenter grid =
+centerOfMass : Grid a -> (Int, Int)
+centerOfMass grid =
   let
     boxes = mapToList (\x y _ -> (toFloat x, toFloat y)) grid
     len = toFloat (List.length boxes)

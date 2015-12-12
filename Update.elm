@@ -151,10 +151,10 @@ rotateTetrimino' model =
   let
     (x, y) = model.activePosition
     rotated = Grid.rotate True model.active
-    centerBefore = Grid.massCenter model.active
-    centerAfter = Grid.massCenter rotated
-    newX = fst centerBefore - fst centerAfter + x
-    newY = toFloat (snd centerBefore - snd centerAfter) + y
+    (xOld, yOld) = Grid.centerOfMass model.active
+    (xNew, yNew) = Grid.centerOfMass rotated
+    newX = x + xOld - xNew
+    newY = y + toFloat (yOld - yNew)
     shiftPosition deltas =
       case deltas of
         dx :: remainingDeltas ->
