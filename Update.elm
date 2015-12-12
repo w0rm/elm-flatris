@@ -9,7 +9,7 @@ import Random
 
 framesSince : Time -> Time -> Float
 framesSince prevTime time =
-  (time - prevTime) * 60 / 1000
+  min ((time - prevTime) * 60 / 1000) 1.5
 
 
 update : Action -> Model -> (Model, Effects Action)
