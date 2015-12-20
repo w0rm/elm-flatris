@@ -7,10 +7,6 @@ import Time exposing (Time)
 import Grid
 import Random
 
-framesSince : Time -> Time -> Float
-framesSince prevTime time =
-  min ((time - prevTime) * 60 / 1000) 1.5
-
 
 update : Action -> Model -> (Model, Effects Action)
 update action model =
@@ -22,19 +18,21 @@ update action model =
         (next, seed) = Tetriminos.random seed'
         (dx, _) = Grid.centerOfMass active
       in
-        ( { model | seed = seed
-                  , active = active
-                  , activePosition = (Grid.width model.grid // 2 - dx, 0)
-                  , next = next
+        ( { model
+          | seed = seed
+          , active = active
+          , activePosition = (Grid.width model.grid // 2 - dx, 0)
+          , next = next
           }
         , Effects.none
         )
     Start ->
-      ( { model | state = Playing
-                , lines = 0
-                , score = 0
-                , grid = Grid.make 10 20 (\_ _ -> Nothing)
-                }
+      ( { model
+        | state = Playing
+        , lines = 0
+        , score = 0
+        , grid = Grid.empty 10 20
+        }
       , Effects.tick Tick
       )
     Pause ->
@@ -50,10 +48,11 @@ update action model =
       , Effects.none
       )
     Move direction ->
-      ( { model | direction = Just { active = True
-                                   , direction = direction
-                                   , elapsedFrames = 0
-                                   }
+      ( { model
+        | direction = Just { active = True
+                           , direction = direction
+                           , elapsed = 0
+                           }
         }
       , Effects.none
       )
@@ -62,7 +61,7 @@ update action model =
       , Effects.none
       )
     Rotate True ->
-      ( {model | rotation = Just {active = True, elapsedFrames = 0}}
+      ( {model | rotation = Just {active = True, elapsed = 0}}
       , Effects.none
       )
     Accelerate on ->
@@ -73,32 +72,29 @@ update action model =
       if model.state == Playing then
         (animate time model, Effects.tick Tick)
       else
-        ({model | animationState = Nothing}, Effects.none)
+        ({model | animation = Nothing}, Effects.none)
 
 
 animate : Time -> Model -> Model
 animate time model =
   let
-    elapsedFrames =
-      case model.animationState of
-        Nothing ->
-          0
-        Just {prevClockTime} ->
-          framesSince prevClockTime time
-    animationState = Just {prevClockTime = time, elapsedFrames = elapsedFrames}
+    elapsed = case model.animation of
+      Nothing -> 0
+      Just {prevClockTime} -> min (time - prevClockTime) 25
+    animation = Just {prevClockTime = time, elapsed = elapsed}
   in
-    {model | animationState = animationState}
-    |> moveTetrimino elapsedFrames
-    |> rotateTetrimino elapsedFrames
-    |> dropTetrimino elapsedFrames
+    {model | animation = animation}
+    |> moveTetrimino elapsed
+    |> rotateTetrimino elapsed
+    |> dropTetrimino elapsed
     |> checkEndGame
 
 
 moveTetrimino : Float -> Model -> Model
-moveTetrimino elapsedFrames model =
+moveTetrimino elapsed model =
   case model.direction of
     Just state ->
-      {model | direction = Just (updateFrames 10 elapsedFrames state)}
+      {model | direction = Just (updateFrames 150 elapsed state)}
       |> (if state.active then moveTetrimino' state.direction else identity)
     Nothing -> model
 
@@ -115,22 +111,34 @@ moveTetrimino' dx model =
       {model | activePosition = (x', y)}
 
 
-updateFrames : Float -> Float -> {a | active: Bool, elapsedFrames: Float} -> {a | active: Bool, elapsedFrames: Float}
-updateFrames limit elapsedFrames state =
+updateFrames : Float -> Float -> {a | active: Bool, elapsed: Float} -> {a | active: Bool, elapsed: Float}
+updateFrames limit elapsed state =
   let
-    elapsedFrames' = state.elapsedFrames + elapsedFrames
+    elapsed' = state.elapsed + elapsed
   in
-    if elapsedFrames' > limit then
-      {state | active = True, elapsedFrames = elapsedFrames' - limit}
+    if elapsed' > limit then
+      {state | active = True, elapsed = elapsed' - limit}
     else
-      {state | active = False, elapsedFrames = elapsedFrames'}
+      {state | active = False, elapsed = elapsed'}
+
+
+animateObject : Time -> Time -> ({a | elapsed: Time} -> {a | elapsed: Time}) -> {a | elapsed: Time} -> {a | elapsed: Time}
+animateObject limit elapsed animationFunc state =
+  let
+    elapsed' = state.elapsed + elapsed
+  in
+    if elapsed' > limit then
+      animationFunc {state | elapsed = elapsed' - limit}
+    else
+      {state | elapsed = elapsed'}
+
 
 
 rotateTetrimino : Float -> Model -> Model
-rotateTetrimino elapsedFrames model =
+rotateTetrimino elapsed model =
   case model.rotation of
     Just rotation ->
-      {model | rotation = Just (updateFrames 30 elapsedFrames rotation)}
+      {model | rotation = Just (updateFrames 300 elapsed rotation)}
       |> (if rotation.active then rotateTetrimino' else identity)
     Nothing -> model
 
@@ -169,10 +177,10 @@ checkEndGame model =
 
 
 dropTetrimino : Float -> Model -> Model
-dropTetrimino elapsedFrames model =
+dropTetrimino elapsed model =
   let
     (x, y) = model.activePosition
-    y' = y + elapsedFrames / (if model.acceleration then 1.5 else 48)
+    y' = y + elapsed / (if model.acceleration then 25 else 800)
   in
     if Grid.collide x (floor y') model.active model.grid then
       let

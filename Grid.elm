@@ -1,4 +1,4 @@
-module Grid (Grid, fromList, map, make, rotate, stamp, collide, mapToList, clearLines, centerOfMass, width, height) where
+module Grid (Grid, fromList, map, empty, rotate, stamp, collide, mapToList, clearLines, centerOfMass, width, height) where
 import Array exposing (Array)
 
 
@@ -18,6 +18,11 @@ map fun grid =
 make : Int -> Int -> (Int -> Int -> Maybe a) -> Grid a
 make w h f =
   Array.initialize h (\y -> Array.initialize w (\x -> f x y))
+
+
+empty : Int -> Int -> Grid a
+empty width height =
+  make width height (\_ _ -> Nothing)
 
 
 get : Int -> Int -> Grid a -> Maybe a

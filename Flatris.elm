@@ -15,14 +15,14 @@ initialModel : Model
 initialModel =
   { active = Grid.fromList []
   , activePosition = (0, 0)
-  , grid = Grid.make 10 20 (\_ _ -> Nothing)
+  , grid = Grid.empty 10 20
   , lines = 0
   , next = Grid.fromList []
   , score = 0
   , seed = Random.initialSeed 0
   , state = Model.Stopped
   , acceleration = False
-  , animationState = Nothing
+  , animation = Nothing
   , rotation = Nothing
   , direction = Nothing
   }

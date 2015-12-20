@@ -1,18 +1,19 @@
-module Model (Model, State(Paused, Playing, Stopped)) where
+module Model (Model, State(..)) where
+
 import Grid exposing (Grid)
 import Random
 import Time exposing (Time)
 
 type State = Paused | Playing | Stopped
 
-type alias AnimationState =
-  Maybe { prevClockTime : Time, elapsedFrames : Float }
+type alias Animation =
+  Maybe { prevClockTime : Time, elapsed : Time }
 
-type alias RotationState =
-  Maybe { active : Bool, elapsedFrames : Float }
+type alias Rotation =
+  Maybe { active : Bool, elapsed : Time }
 
-type alias DirectionState =
-  Maybe { active : Bool, direction : Int, elapsedFrames : Float }
+type alias Direction =
+  Maybe { active : Bool, direction : Int, elapsed : Time }
 
 type alias Model =
   { active : Grid String
@@ -24,7 +25,7 @@ type alias Model =
   , seed : Random.Seed
   , state : State
   , acceleration : Bool
-  , animationState : AnimationState
-  , direction : DirectionState
-  , rotation : RotationState
+  , animation : Animation
+  , direction : Direction
+  , rotation : Rotation
   }
