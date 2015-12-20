@@ -90,11 +90,11 @@ animate time model =
     |> checkEndGame
 
 
-moveTetrimino : Float -> Model -> Model
+moveTetrimino : Time -> Model -> Model
 moveTetrimino elapsed model =
   case model.direction of
     Just state ->
-      {model | direction = Just (updateFrames 150 elapsed state)}
+      {model | direction = Just (activateButton 150 elapsed state)}
       |> (if state.active then moveTetrimino' state.direction else identity)
     Nothing -> model
 
@@ -111,34 +111,22 @@ moveTetrimino' dx model =
       {model | activePosition = (x', y)}
 
 
-updateFrames : Float -> Float -> {a | active: Bool, elapsed: Float} -> {a | active: Bool, elapsed: Float}
-updateFrames limit elapsed state =
+activateButton : Time -> Time -> {a | active: Bool, elapsed: Time} -> {a | active: Bool, elapsed: Time}
+activateButton interval elapsed state =
   let
     elapsed' = state.elapsed + elapsed
   in
-    if elapsed' > limit then
-      {state | active = True, elapsed = elapsed' - limit}
+    if elapsed' > interval then
+      {state | active = True, elapsed = elapsed' - interval}
     else
       {state | active = False, elapsed = elapsed'}
 
 
-animateObject : Time -> Time -> ({a | elapsed: Time} -> {a | elapsed: Time}) -> {a | elapsed: Time} -> {a | elapsed: Time}
-animateObject limit elapsed animationFunc state =
-  let
-    elapsed' = state.elapsed + elapsed
-  in
-    if elapsed' > limit then
-      animationFunc {state | elapsed = elapsed' - limit}
-    else
-      {state | elapsed = elapsed'}
-
-
-
-rotateTetrimino : Float -> Model -> Model
+rotateTetrimino : Time -> Model -> Model
 rotateTetrimino elapsed model =
   case model.rotation of
     Just rotation ->
-      {model | rotation = Just (updateFrames 300 elapsed rotation)}
+      {model | rotation = Just (activateButton 300 elapsed rotation)}
       |> (if rotation.active then rotateTetrimino' else identity)
     Nothing -> model
 
@@ -158,7 +146,10 @@ rotateTetrimino' model =
           if Grid.collide (newX + dx) (floor newY) rotated model.grid then
             shiftPosition remainingDeltas
           else
-            {model | active = rotated, activePosition = (newX + dx, newY)}
+            { model
+            | active = rotated
+            , activePosition = (newX + dx, newY)
+            }
         [] ->
           model
   in
@@ -167,20 +158,22 @@ rotateTetrimino' model =
 
 checkEndGame : Model -> Model
 checkEndGame model =
-  let
-    check _ y _ = y == 0
-  in
-    if Grid.mapToList check model.grid |> List.any identity then
-      {model | state = Stopped}
-    else
-      model
+  if List.any identity (Grid.mapToList (\_ y _ -> y == 0) model.grid) then
+    {model | state = Stopped}
+  else
+    model
 
 
-dropTetrimino : Float -> Model -> Model
+dropTetrimino : Time -> Model -> Model
 dropTetrimino elapsed model =
   let
     (x, y) = model.activePosition
-    y' = y + elapsed / (if model.acceleration then 25 else 800)
+    speed =
+      if model.acceleration then
+        25
+      else
+        max 25 (800 - 25 * toFloat (level model - 1))
+    y' = y + elapsed / speed
   in
     if Grid.collide x (floor y') model.active model.grid then
       let
@@ -188,13 +181,14 @@ dropTetrimino elapsed model =
         (next, seed') = Tetriminos.random model.seed
         (dx, _) = Grid.centerOfMass model.next
       in
-        {model | grid = Grid.stamp x (floor y) model.active model.grid
-               , activePosition = (Grid.width model.grid // 2 - dx, 0)
-               , active = model.next
-               , next = next
-               , seed = seed'
-               , score = model.score + score
-               }
+        { model
+        | grid = Grid.stamp x (floor y) model.active model.grid
+        , activePosition = (Grid.width model.grid // 2 - dx, 0)
+        , active = model.next
+        , next = next
+        , seed = seed'
+        , score = model.score + score * (if model.acceleration then 2 else 1)
+        }
         |> clearLines
     else
       {model | activePosition = (x, y')}
@@ -204,7 +198,20 @@ clearLines : Model -> Model
 clearLines model =
   let
     (grid, lines) = Grid.clearLines model.grid
+    bonus = case lines of
+      0 -> 0
+      1 -> 100
+      2 -> 300
+      3 -> 500
+      _ -> 800
   in
-    { model | grid = grid
-            , lines = model.lines + lines
+    { model
+    | grid = grid
+    , score = model.score + bonus * level model
+    , lines = model.lines + lines
     }
+
+
+level : Model -> Int
+level model =
+  model.lines // 10 + 1

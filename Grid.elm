@@ -7,7 +7,7 @@ type alias Grid a = Array (Array (Maybe a))
 
 fromList : List (List (Maybe a)) -> Grid a
 fromList listOfLists =
-  List.map Array.fromList listOfLists |> Array.fromList
+  Array.fromList (List.map Array.fromList listOfLists)
 
 
 map : (a -> b) -> Grid a -> Grid b
@@ -40,8 +40,7 @@ height =
 
 width : Grid a -> Int
 width grid =
-  Maybe.map Array.length (Array.get 0 grid)
-  |> Maybe.withDefault 0
+  Maybe.withDefault 0 (Maybe.map Array.length (Array.get 0 grid))
 
 
 rotate : Bool -> Grid a -> Grid a
@@ -84,7 +83,7 @@ collide x y sample grid =
           Just value -> True
           Nothing -> False
   in
-    mapToList collideCell sample |> List.any identity
+    List.any identity (mapToList collideCell sample)
 
 
 mapToList : (Int -> Int -> a -> b) -> Grid a -> List b
