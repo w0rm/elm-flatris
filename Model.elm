@@ -1,4 +1,4 @@
-module Model (Model, State(..)) where
+module Model (Model, State(..), initial) where
 
 import Grid exposing (Grid)
 import Random
@@ -28,4 +28,20 @@ type alias Model =
   , animation : Animation
   , direction : Direction
   , rotation : Rotation
+  }
+
+initial : Model
+initial =
+  { active = Grid.empty 0 0
+  , activePosition = (0, 0)
+  , grid = Grid.empty 10 20
+  , lines = 0
+  , next = Grid.empty 0 0
+  , score = 0
+  , seed = Random.initialSeed 0
+  , state = Stopped
+  , acceleration = False
+  , animation = Nothing
+  , rotation = Nothing
+  , direction = Nothing
   }
