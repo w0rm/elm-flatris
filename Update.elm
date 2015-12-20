@@ -21,10 +21,10 @@ update action model =
         ( { model
           | seed = seed
           , active = active
-          , activePosition = (Grid.width model.grid // 2 - dx, 0)
+          , position = (Grid.width model.grid // 2 - dx, 0)
           , next = next
           }
-        , Effects.none
+        , Effects.tick Tick
         )
     Start ->
       ( { model
@@ -33,7 +33,7 @@ update action model =
         , score = 0
         , grid = Grid.empty 10 20
         }
-      , Effects.tick Tick
+      , Effects.none
       )
     Pause ->
       ( {model | state = Paused}
@@ -41,7 +41,7 @@ update action model =
       )
     Resume ->
       ( {model | state = Playing}
-      , Effects.tick Tick
+      , Effects.none
       )
     Move 0 ->
       ( {model | direction = Nothing}
@@ -65,14 +65,14 @@ update action model =
       , Effects.none
       )
     Accelerate on ->
-      ( {model | acceleration = on }
+      ( {model | acceleration = on}
       , Effects.none
       )
     Tick time ->
       if model.state == Playing then
         (animate time model, Effects.tick Tick)
       else
-        ({model | animation = Nothing}, Effects.none)
+        ({model | animation = Nothing}, Effects.tick Tick)
 
 
 animate : Time -> Model -> Model
@@ -102,13 +102,13 @@ moveTetrimino elapsed model =
 moveTetrimino' : Int -> Model -> Model
 moveTetrimino' dx model =
   let
-    (x, y) = model.activePosition
+    (x, y) = model.position
     x' = x + dx
   in
     if Grid.collide x' (floor y) model.active model.grid then
       model
     else
-      {model | activePosition = (x', y)}
+      {model | position = (x', y)}
 
 
 activateButton : Time -> Time -> {a | active: Bool, elapsed: Time} -> {a | active: Bool, elapsed: Time}
@@ -134,7 +134,7 @@ rotateTetrimino elapsed model =
 rotateTetrimino' : Model -> Model
 rotateTetrimino' model =
   let
-    (x, y) = model.activePosition
+    (x, y) = model.position
     rotated = Grid.rotate True model.active
     (xOld, yOld) = Grid.centerOfMass model.active
     (xNew, yNew) = Grid.centerOfMass rotated
@@ -148,7 +148,7 @@ rotateTetrimino' model =
           else
             { model
             | active = rotated
-            , activePosition = (newX + dx, newY)
+            , position = (newX + dx, newY)
             }
         [] ->
           model
@@ -167,7 +167,7 @@ checkEndGame model =
 dropTetrimino : Time -> Model -> Model
 dropTetrimino elapsed model =
   let
-    (x, y) = model.activePosition
+    (x, y) = model.position
     speed =
       if model.acceleration then
         25
@@ -183,7 +183,7 @@ dropTetrimino elapsed model =
       in
         { model
         | grid = Grid.stamp x (floor y) model.active model.grid
-        , activePosition = (Grid.width model.grid // 2 - dx, 0)
+        , position = (Grid.width model.grid // 2 - dx, 0)
         , active = model.next
         , next = next
         , seed = seed'
@@ -191,7 +191,7 @@ dropTetrimino elapsed model =
         }
         |> clearLines
     else
-      {model | activePosition = (x, y')}
+      {model | position = (x, y')}
 
 
 clearLines : Model -> Model

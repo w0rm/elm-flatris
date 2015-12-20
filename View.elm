@@ -56,7 +56,7 @@ renderWell address model =
     , "width" => "300px"
     ]
   ]
-  (renderTetrimino model.activePosition model.active :: renderBoxes model.grid)
+  (renderTetrimino model.position model.active :: renderBoxes model.grid)
 
 
 renderTitle : String -> Html

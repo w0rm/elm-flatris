@@ -1,6 +1,7 @@
-module Grid (Grid, fromList, map, empty, rotate, stamp, collide, mapToList, clearLines, centerOfMass, width, height) where
+module Grid (Grid, decode, encode, fromList, map, empty, rotate, stamp, collide, mapToList, clearLines, centerOfMass, width, height) where
 import Array exposing (Array)
-
+import Json.Decode as Decode
+import Json.Encode as Encode
 
 type alias Grid a = Array (Array (Maybe a))
 
@@ -118,3 +119,28 @@ centerOfMass grid =
     (x, y) = List.unzip boxes
   in
     (round (List.sum x / len), round (List.sum y / len))
+
+
+decode : Decode.Decoder a -> Decode.Decoder (Grid a)
+decode cell =
+  Decode.array
+  ( Decode.array
+    ( Decode.oneOf
+      [ Decode.null Nothing
+      , Decode.map Just cell
+      ]
+    )
+  )
+
+
+encode : (a -> Encode.Value) -> (Grid a) -> Encode.Value
+encode cell grid =
+  let
+    encodeCell c =
+      case c of
+        Nothing -> Encode.null
+        Just value -> cell value
+    encodeRow row =
+      Encode.array (Array.map encodeCell row)
+  in
+    Encode.array (Array.map encodeRow grid)
