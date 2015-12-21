@@ -1,15 +1,24 @@
 module View (view) where
 import Html exposing (div, Html, text, button)
 import Html.Attributes exposing (style)
-import Html.Events exposing (onClick, onMouseDown, onMouseUp)
+import Html.Events exposing (onClick, onMouseDown, onMouseUp, on)
 import Markdown
 import Model exposing (Model)
 import Actions exposing (Action)
 import Grid exposing (Grid)
-
+import Json.Decode as Decode
 
 (=>) : a -> b -> (a, b)
 (=>) = (,)
+
+
+onTouchStart : Signal.Address a -> a -> Html.Attribute
+onTouchStart address action =
+  on "touchstart" Decode.value (\_ -> Signal.message address action)
+
+onTouchEnd : Signal.Address a -> a -> Html.Attribute
+onTouchEnd address action =
+  on "touchend" Decode.value (\_ -> Signal.message address action)
 
 
 renderBox : Int -> Int -> String -> Html
@@ -164,12 +173,14 @@ renderPanel address model =
 
 renderControlButton : String -> List Html.Attribute -> Html
 renderControlButton txt attrs =
-  button
+  div
   ( style
     [ "background" => "#ecf0f1"
     , "border" => "0"
     , "color" => "#34495f"
     , "cursor" => "pointer"
+    , "text-align" => "center"
+    , "-webkit-user-select" => "none"
     , "display" => "block"
     , "float" => "left"
     , "font-family" => "Helvetica, Arial, sans-serif"
@@ -199,18 +210,26 @@ renderControls address =
   [ renderControlButton "↻" [
       onMouseDown address (Actions.Rotate True)
     , onMouseUp address (Actions.Rotate False)
+    , onTouchStart address (Actions.Rotate True)
+    , onTouchEnd address (Actions.Rotate False)
     ]
   , renderControlButton "←" [
       onMouseDown address (Actions.Move -1)
     , onMouseUp address (Actions.Move 0)
+    , onTouchStart address (Actions.Move -1)
+    , onTouchEnd address (Actions.Move 0)
     ]
   , renderControlButton "→" [
       onMouseDown address (Actions.Move 1)
     , onMouseUp address (Actions.Move 0)
+    , onTouchStart address (Actions.Move 1)
+    , onTouchEnd address (Actions.Move 0)
     ]
   , renderControlButton "↓" [
       onMouseDown address (Actions.Accelerate True)
     , onMouseUp address (Actions.Accelerate False)
+    , onTouchStart address (Actions.Accelerate True)
+    , onTouchEnd address (Actions.Accelerate False)
     ]
   ]
 
@@ -249,7 +268,10 @@ elm-flatris is open source on
 view : Signal.Address Action -> Model -> Html
 view address model =
   div
-  [ style ["padding" => "30px 0"] ]
+  [ style ["padding" => "30px 0"]
+  , onTouchEnd address Actions.UnlockButtons
+  , onMouseUp address Actions.UnlockButtons
+  ]
   [ div
     [ style
       [ "height" => "680px"

@@ -9,6 +9,7 @@ type Action
   | Pause
   | Resume
   | Tick Time
+  | UnlockButtons
   | Move Int
   | Rotate Bool
   | Accelerate Bool

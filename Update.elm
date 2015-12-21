@@ -87,6 +87,9 @@ update action model =
       ( {model | acceleration = on}
       , Effects.none
       )
+    UnlockButtons ->
+      ( {model | rotation = Nothing, direction = Nothing, acceleration = False}
+      , Effects.none)
     Tick time ->
       let
         model =
