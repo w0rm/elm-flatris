@@ -3,6 +3,8 @@ import Time exposing (Time)
 
 type Action
   = Init Time
+  | Load String
+  | Saved
   | Start
   | Pause
   | Resume

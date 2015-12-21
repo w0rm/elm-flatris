@@ -6,6 +6,23 @@ import Tetriminos
 import Time exposing (Time)
 import Grid
 import Random
+import LocalStorage
+import Task exposing (Task)
+
+
+getFromStorage : String -> Effects Action
+getFromStorage key =
+  LocalStorage.get key `Task.onError` (\_ -> Task.succeed Nothing)
+    |> Task.map (\result -> Load (Maybe.withDefault "" result))
+    |> Effects.task
+
+
+saveToStorage : String -> String -> Effects Action
+saveToStorage key value =
+  LocalStorage.set key value
+    |> Task.toMaybe
+    |> Task.map (always Saved)
+    |> Effects.task
 
 
 update : Action -> Model -> (Model, Effects Action)
@@ -24,8 +41,10 @@ update action model =
           , position = (Grid.width model.grid // 2 - dx, 0)
           , next = next
           }
-        , Effects.tick Tick
+        , getFromStorage "elm-flatris"
         )
+    Load string ->
+      (Model.decode string model, Effects.tick Tick)
     Start ->
       ( { model
         | state = Playing
@@ -69,10 +88,16 @@ update action model =
       , Effects.none
       )
     Tick time ->
-      if model.state == Playing then
-        (animate time model, Effects.tick Tick)
-      else
-        ({model | animation = Nothing}, Effects.tick Tick)
+      let
+        model =
+          if model.state == Playing then
+            animate time model
+          else
+            {model | animation = Nothing}
+      in
+        (model, saveToStorage "elm-flatris" (Model.encode 0 model))
+    Saved ->
+      (model, Effects.tick Tick)
 
 
 animate : Time -> Model -> Model

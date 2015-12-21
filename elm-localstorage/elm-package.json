@@ -1,0 +1,16 @@
+{
+    "version": "1.0.0",
+    "summary": "LocalStorage task adapter for Elm",
+    "description": "Allows setting/getting/removing localStorage values via Elm tasks",
+    "license": "MIT",
+    "source-directories": [
+        "."
+    ],
+    "exposed-modules": ["LocalStorage"],
+    "dependencies": {
+        "elm-lang/core": "2.0.0 <= v < 3.0.0"
+    },
+    "repository": "https://github.com/xdissent/elm-localstorage.git",
+    "elm-version": "0.15.0 <= v < 0.16.0",
+    "native-modules": true
+}

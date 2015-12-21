@@ -4,9 +4,11 @@
     "repository": "https://github.com/w0rm/elm-flatris.git",
     "license": "MIT",
     "source-directories": [
-        "."
+        ".",
+        "elm-localstorage"
     ],
     "exposed-modules": [],
+    "native-modules": true,
     "dependencies": {
         "elm-lang/core": "3.0.0 <= v < 4.0.0",
         "evancz/elm-effects": "2.0.1 <= v < 3.0.0",
