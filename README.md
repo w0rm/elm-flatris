@@ -1,8 +1,6 @@
 # elm-flatris
 A [Flatris](https://github.com/skidding/flatris) clone in elm language.
 
-This project is not complete yet, for missing functionality check [the list of issues](https://github.com/w0rm/elm-flatris/issues).
-
 Current demo can be seen [here](http://unsoundscapes.com/elm-flatris.html).
 
 ## Instructions to run
@@ -15,7 +13,7 @@ Current demo can be seen [here](http://unsoundscapes.com/elm-flatris.html).
 
 ## Touch support (tested on iOS)
 
-For a touch support compile to html `elm make --output elm-flatris.html` and add the following meta:
+For a touch support compile to html `elm make Main.elm --output elm-flatris.html` and add the following meta:
 
 ```html
 <meta name="viewport" content="width=480,user-scalable=0">
