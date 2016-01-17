@@ -3,25 +3,34 @@ import Json.Decode as Decode exposing ((:=))
 import Json.Encode as Encode
 
 
-type alias Cell a = {
-  val: a,
-  pos: (Int, Int)
-}
+type alias Cell a =
+  { val: a
+  , pos: (Int, Int)
+  }
 
 
-type alias Grid a = List (Cell a)
+type alias Grid a =
+  List (Cell a)
 
 
 fromList : a -> List (Int, Int) -> Grid a
-fromList value = List.map (Cell value)
+fromList value =
+  List.map (Cell value)
 
 
 map : (a -> b) -> Grid a -> Grid b
-map fun = List.map (\cell -> {cell | val = fun cell.val})
+map fun =
+  List.map (\cell -> {cell | val = fun cell.val})
+
+
+mapToList : (Int -> Int -> a -> b) -> Grid a -> List b
+mapToList fun =
+  List.map (\{val, pos} -> fun (fst pos) (snd pos) val)
 
 
 empty : Grid a
-empty = []
+empty =
+  []
 
 
 -- rotates grid around center of mass
@@ -51,7 +60,7 @@ stamp x y sample grid =
         stamp x y rest ({cell | pos = newPos} :: List.filter (\{pos} -> pos /= newPos) grid)
 
 
--- collides a positioned sample with a grid and its bounds
+-- collides a positioned sample with bounds and a grid
 collide : Int -> Int -> Int -> Int -> Grid a -> Grid a -> Bool
 collide wid hei x y sample grid =
   case sample of
@@ -60,17 +69,10 @@ collide wid hei x y sample grid =
       let
         (x', y') = (fst cell.pos + x, snd cell.pos + y)
       in
-        if (x' >= wid) || (x' < 0) || (y' >= hei) then
+        if (x' >= wid) || (x' < 0) || (y' >= hei) || List.member (x', y') (List.map .pos grid) then
           True
         else
-          if List.member (x', y') (List.map .pos grid) then
-            True
-          else
-            collide wid hei x y rest grid
-
-
-mapToList : (Int -> Int -> a -> b) -> Grid a -> List b
-mapToList fun = List.map (\{val, pos} -> fun (fst pos) (snd pos) val)
+          collide wid hei x y rest grid
 
 
 fullLine : Int -> Grid a -> Maybe Int
@@ -117,9 +119,9 @@ decode : Decode.Decoder a -> Decode.Decoder (Grid a)
 decode cell =
   Decode.list
   ( Decode.object2
-    Cell
-    ("val" := cell)
-    ("pos" := Decode.tuple2 (,) Decode.int Decode.int)
+      Cell
+      ("val" := cell)
+      ("pos" := Decode.tuple2 (,) Decode.int Decode.int)
   )
 
 
