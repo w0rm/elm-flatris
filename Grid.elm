@@ -1,4 +1,4 @@
-module Grid (Grid, decode, encode, fromList, map, empty, rotate, stamp, collide, mapToList, clearLines, centerOfMass) where
+module Grid (Grid, decode, encode, fromList, empty, rotate, stamp, collide, mapToList, clearLines, centerOfMass) where
 import Json.Decode as Decode exposing ((:=))
 import Json.Encode as Encode
 
@@ -18,14 +18,9 @@ fromList value =
   List.map (Cell value)
 
 
-map : (a -> b) -> Grid a -> Grid b
-map fun =
-  List.map (\cell -> {cell | val = fun cell.val})
-
-
-mapToList : (Int -> Int -> a -> b) -> Grid a -> List b
+mapToList : (a -> (Int, Int) -> b) -> Grid a -> List b
 mapToList fun =
-  List.map (\{val, pos} -> fun (fst pos) (snd pos) val)
+  List.map (\{val, pos} -> fun val pos)
 
 
 empty : Grid a
@@ -75,6 +70,7 @@ collide wid hei x y sample grid =
           collide wid hei x y rest grid
 
 
+-- finds the first full line to be cleared
 fullLine : Int -> Grid a -> Maybe Int
 fullLine wid grid =
   case grid of
@@ -90,6 +86,7 @@ fullLine wid grid =
           fullLine wid remaining
 
 
+-- returns updated grid and number of cleared lines
 clearLines : Int -> Grid a -> (Grid a, Int)
 clearLines wid grid =
   case fullLine wid grid of

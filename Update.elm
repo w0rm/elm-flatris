@@ -182,7 +182,7 @@ rotateTetrimino' model =
 
 checkEndGame : Model -> Model
 checkEndGame model =
-  if List.any identity (Grid.mapToList (\_ y _ -> y == 0) model.grid) then
+  if List.any identity (Grid.mapToList (\_ (_, y) -> y == 0) model.grid) then
     {model | state = Stopped}
   else
     model

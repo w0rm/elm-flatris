@@ -8,6 +8,7 @@ import Actions exposing (Action)
 import Grid exposing (Grid)
 import Json.Decode as Decode
 
+
 (=>) : a -> b -> (a, b)
 (=>) = (,)
 
@@ -16,16 +17,17 @@ onTouchStart : Signal.Address a -> a -> Html.Attribute
 onTouchStart address action =
   on "touchstart" Decode.value (\_ -> Signal.message address action)
 
+
 onTouchEnd : Signal.Address a -> a -> Html.Attribute
 onTouchEnd address action =
   on "touchend" Decode.value (\_ -> Signal.message address action)
 
 
-renderBox : Int -> Int -> String -> Html
-renderBox x y c =
+renderBox : (String -> String) -> String -> (Int, Int) -> Html
+renderBox fun c (x, y) =
   div
   [ style
-    [ "background" => c
+    [ "background" => fun c
     , "height" => "30px"
     , "left" => (toString (x * 30) ++ "px")
     , "position" => "absolute"
@@ -35,37 +37,22 @@ renderBox x y c =
   ] []
 
 
-renderBoxes : Grid String -> List Html
-renderBoxes grid =
-  Grid.mapToList renderBox grid
-
-
-renderTetrimino : (Int, Float) -> Grid String -> Html
-renderTetrimino coords grid =
-  div
-  [ style
-    [ "left" => (toString (fst coords * 30) ++ "px")
-    , "position" => "absolute"
-    , "top" => (toString (floor (snd coords) * 30) ++ "px")
-    ]
-  ]
-  (renderBoxes grid)
-
-
 renderWell : Signal.Address Action -> Model -> Html
-renderWell address model =
+renderWell address {width, height, active, grid, position} =
   div
   [ style
     [ "background" => "#ecf0f1"
-    , "height" => "600px"
+    , "height" => (toString (height * 30) ++ "px")
     , "left" => "0"
     , "overflow" => "hidden"
     , "position" => "absolute"
     , "top" => "0"
-    , "width" => "300px"
+    , "width" => (toString (width * 30) ++ "px")
     ]
   ]
-  (renderTetrimino model.position model.active :: renderBoxes model.grid)
+  ( Grid.stamp (fst position) (floor (snd position)) active grid
+    |> Grid.mapToList (renderBox identity)
+  )
 
 
 renderTitle : String -> Html
@@ -104,7 +91,7 @@ renderCount n =
     , "margin" => "5px 0 0"
     ]
   ]
-  [ toString n |> text ]
+  [ text (toString n) ]
 
 
 renderGameButton : Signal.Address Action -> Model.State -> Html
@@ -140,7 +127,7 @@ renderGameButton address state =
 
 
 renderPanel : Signal.Address Action -> Model -> Html
-renderPanel address model =
+renderPanel address {score, lines, next, state} =
   div
   [ style
     [ "bottom" => "80px"
@@ -156,9 +143,9 @@ renderPanel address model =
   ]
   [ renderTitle "Flatris"
   , renderLabel "Score"
-  , renderCount model.score
+  , renderCount score
   , renderLabel "Lines Cleared"
-  , renderCount model.lines
+  , renderCount lines
   , renderLabel "Next Shape"
   , div
     [ style
@@ -166,8 +153,8 @@ renderPanel address model =
       , "position" => "relative"
       ]
     ]
-    (Grid.map (\_ -> "#ecf0f1") model.next |> renderBoxes)
-  , renderGameButton address model.state
+    (Grid.mapToList (renderBox (always "#ecf0f1")) next)
+  , renderGameButton address state
   ]
 
 
@@ -207,26 +194,26 @@ renderControls address =
     , "top" => "600px"
     ]
   ]
-  [ renderControlButton "↻" [
-      onMouseDown address (Actions.Rotate True)
+  [ renderControlButton "↻"
+    [ onMouseDown address (Actions.Rotate True)
     , onMouseUp address (Actions.Rotate False)
     , onTouchStart address (Actions.Rotate True)
     , onTouchEnd address (Actions.Rotate False)
     ]
-  , renderControlButton "←" [
-      onMouseDown address (Actions.Move -1)
+  , renderControlButton "←"
+    [ onMouseDown address (Actions.Move -1)
     , onMouseUp address (Actions.Move 0)
     , onTouchStart address (Actions.Move -1)
     , onTouchEnd address (Actions.Move 0)
     ]
-  , renderControlButton "→" [
-      onMouseDown address (Actions.Move 1)
+  , renderControlButton "→"
+    [ onMouseDown address (Actions.Move 1)
     , onMouseUp address (Actions.Move 0)
     , onTouchStart address (Actions.Move 1)
     , onTouchEnd address (Actions.Move 0)
     ]
-  , renderControlButton "↓" [
-      onMouseDown address (Actions.Accelerate True)
+  , renderControlButton "↓"
+    [ onMouseDown address (Actions.Accelerate True)
     , onMouseUp address (Actions.Accelerate False)
     , onTouchStart address (Actions.Accelerate True)
     , onTouchEnd address (Actions.Accelerate False)
@@ -249,7 +236,7 @@ renderInfo state =
     , "position" => "absolute"
     , "top" => "0"
     , "width" => "270px"
-    , "display" => (if state == Model.Playing then "none" else "block")
+    , "display" => if state == Model.Playing then "none" else "block"
     ]
   ] [
     Markdown.toHtml """
