@@ -73,25 +73,33 @@ mapToList : (Int -> Int -> a -> b) -> Grid a -> List b
 mapToList fun = List.map (\{val, pos} -> fun (fst pos) (snd pos) val)
 
 
-clearLines : Int -> Grid a -> (Grid a, Int)
-clearLines wid grid =
+fullLine : Int -> Grid a -> Maybe Int
+fullLine wid grid =
   case grid of
-    [] -> ([], 0)
-    cell :: rest ->
+    [] -> Nothing
+    cell :: _ ->
       let
         lineY = snd cell.pos
         (inline, remaining) = List.partition (\{pos} -> snd pos == lineY) grid
       in
         if List.length inline == wid then
-          let
-            (a, v) = clearLines wid remaining
-          in
-            (a, v + 1)
+          Just lineY
         else
-          let
-            (a, v) = clearLines wid rest
-          in
-            (cell :: a, v)
+          fullLine wid remaining
+
+
+clearLines : Int -> Grid a -> (Grid a, Int)
+clearLines wid grid =
+  case fullLine wid grid of
+    Nothing -> (grid, 0)
+    Just lineY ->
+      let
+        clearedGrid = List.filter (\{pos} -> snd pos /= lineY) grid
+        (above, below) = List.partition (\{pos} -> snd pos < lineY) clearedGrid
+        droppedAbove = List.map (\c -> { c | pos = (fst c.pos, snd c.pos + 1)}) above
+        (newGrid, lines) = clearLines wid (droppedAbove ++ below)
+      in
+        (newGrid, lines + 1)
 
 
 centerOfMass : Grid a -> (Int, Int)
