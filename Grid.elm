@@ -1,146 +1,137 @@
-module Grid (Grid, decode, encode, fromList, map, empty, rotate, stamp, collide, mapToList, clearLines, centerOfMass, width, height) where
-import Array exposing (Array)
-import Json.Decode as Decode
+module Grid (Grid, decode, encode, fromList, map, empty, rotate, stamp, collide, mapToList, clearLines, centerOfMass) where
+import Json.Decode as Decode exposing ((:=))
 import Json.Encode as Encode
 
-type alias Grid a = Array (Array (Maybe a))
+
+type alias Cell a =
+  { val: a
+  , pos: (Int, Int)
+  }
 
 
-fromList : List (List (Maybe a)) -> Grid a
-fromList listOfLists =
-  Array.fromList (List.map Array.fromList listOfLists)
+type alias Grid a =
+  List (Cell a)
+
+
+fromList : a -> List (Int, Int) -> Grid a
+fromList value =
+  List.map (Cell value)
 
 
 map : (a -> b) -> Grid a -> Grid b
-map fun grid =
-  Array.map (\row -> Array.map (Maybe.map fun) row) grid
-
-
-make : Int -> Int -> (Int -> Int -> Maybe a) -> Grid a
-make w h f =
-  Array.initialize h (\y -> Array.initialize w (\x -> f x y))
-
-
-empty : Int -> Int -> Grid a
-empty width height =
-  make width height (\_ _ -> Nothing)
-
-
-get : Int -> Int -> Grid a -> Maybe a
-get x y grid =
-  let
-    row = Maybe.withDefault Array.empty (Array.get y grid)
-  in
-    Maybe.withDefault Nothing (Array.get x row)
-
-
-height : Grid a -> Int
-height =
-  Array.length
-
-
-width : Grid a -> Int
-width grid =
-  Maybe.withDefault 0 (Maybe.map Array.length (Array.get 0 grid))
-
-
-rotate : Bool -> Grid a -> Grid a
-rotate clockwise grid =
-  let
-    wid = width grid
-    hei = height grid
-    fn x y =
-      if clockwise then
-        get y (hei - x - 1) grid
-      else
-        get (wid - y - 1) x grid
-  in
-    make hei wid fn
-
-
-stamp : Int -> Int -> Grid a -> Grid a -> Grid a
-stamp x y sample grid =
-  let
-    fn x' y' =
-      Maybe.oneOf
-        [ get (x' - x) (y' - y) sample
-        , get x' y' grid
-        ]
-  in
-    make (width grid) (height grid) fn
-
-
--- collides a positioned sample with a grid and its bounds
-collide : Int -> Int -> Grid a -> Grid a -> Bool
-collide x y sample grid =
-  let
-    wid = width grid
-    hei = height grid
-    collideCell x' y' _ =
-      if (x' + x >= wid) || (x' + x < 0) || (y + y' >= hei) then
-        True
-      else
-        case get (x' + x) (y' + y) grid of
-          Just value -> True
-          Nothing -> False
-  in
-    List.any identity (mapToList collideCell sample)
+map fun =
+  List.map (\cell -> {cell | val = fun cell.val})
 
 
 mapToList : (Int -> Int -> a -> b) -> Grid a -> List b
-mapToList fun grid =
-  let
-    processCell y (x, cell) =
-      Maybe.map (fun x y) cell
-    processRow y row =
-      List.filterMap (processCell y) (Array.toIndexedList row)
-  in
-    Array.indexedMap processRow grid
-    |> Array.toList
-    |> List.concat
+mapToList fun =
+  List.map (\{val, pos} -> fun (fst pos) (snd pos) val)
 
 
-clearLines : Grid a -> (Grid a, Int)
-clearLines grid =
+empty : Grid a
+empty =
+  []
+
+
+-- rotates grid around center of mass
+rotate : Bool -> Grid a -> Grid a
+rotate clockwise grid =
   let
-    keep row = List.any ((==) Nothing) (Array.toList row)
-    grid' = Array.filter keep grid
-    lines = height grid - height grid'
-    add = make (width grid) lines (\_ _ -> Nothing)
+    (x, y) = centerOfMass grid
+    fn cell =
+      if clockwise then
+        { cell | pos = (1 + y - snd cell.pos, -x + y + fst cell.pos) }
+      else
+        { cell | pos = (-y + x + snd cell.pos, 1 + x - fst cell.pos) }
   in
-    (Array.append add grid', lines)
+    List.map fn grid
+
+
+-- stamps a grid into another grid with predefined offset
+stamp : Int -> Int -> Grid a -> Grid a -> Grid a
+stamp x y sample grid =
+  case sample of
+    [] -> grid
+    cell :: rest ->
+      let
+        newPos = (fst cell.pos + x, snd cell.pos + y)
+        newCell = {cell | pos = newPos}
+      in
+        stamp x y rest ({cell | pos = newPos} :: List.filter (\{pos} -> pos /= newPos) grid)
+
+
+-- collides a positioned sample with bounds and a grid
+collide : Int -> Int -> Int -> Int -> Grid a -> Grid a -> Bool
+collide wid hei x y sample grid =
+  case sample of
+    [] -> False
+    cell :: rest ->
+      let
+        (x', y') = (fst cell.pos + x, snd cell.pos + y)
+      in
+        if (x' >= wid) || (x' < 0) || (y' >= hei) || List.member (x', y') (List.map .pos grid) then
+          True
+        else
+          collide wid hei x y rest grid
+
+
+fullLine : Int -> Grid a -> Maybe Int
+fullLine wid grid =
+  case grid of
+    [] -> Nothing
+    cell :: _ ->
+      let
+        lineY = snd cell.pos
+        (inline, remaining) = List.partition (\{pos} -> snd pos == lineY) grid
+      in
+        if List.length inline == wid then
+          Just lineY
+        else
+          fullLine wid remaining
+
+
+clearLines : Int -> Grid a -> (Grid a, Int)
+clearLines wid grid =
+  case fullLine wid grid of
+    Nothing -> (grid, 0)
+    Just lineY ->
+      let
+        clearedGrid = List.filter (\{pos} -> snd pos /= lineY) grid
+        (above, below) = List.partition (\{pos} -> snd pos < lineY) clearedGrid
+        droppedAbove = List.map (\c -> { c | pos = (fst c.pos, snd c.pos + 1)}) above
+        (newGrid, lines) = clearLines wid (droppedAbove ++ below)
+      in
+        (newGrid, lines + 1)
 
 
 centerOfMass : Grid a -> (Int, Int)
 centerOfMass grid =
   let
-    boxes = mapToList (\x y _ -> (toFloat x, toFloat y)) grid
-    len = toFloat (List.length boxes)
-    (x, y) = List.unzip boxes
+    len = toFloat (List.length grid)
+    (x, y) = List.unzip (List.map .pos grid)
   in
-    (round (List.sum x / len), round (List.sum y / len))
+    ( round (toFloat (List.sum x) / len)
+    , round (toFloat (List.sum y) / len)
+    )
 
 
 decode : Decode.Decoder a -> Decode.Decoder (Grid a)
 decode cell =
-  Decode.array
-  ( Decode.array
-    ( Decode.oneOf
-      [ Decode.null Nothing
-      , Decode.map Just cell
-      ]
-    )
+  Decode.list
+  ( Decode.object2
+      Cell
+      ("val" := cell)
+      ("pos" := Decode.tuple2 (,) Decode.int Decode.int)
   )
 
 
 encode : (a -> Encode.Value) -> (Grid a) -> Encode.Value
 encode cell grid =
   let
-    encodeCell c =
-      case c of
-        Nothing -> Encode.null
-        Just value -> cell value
-    encodeRow row =
-      Encode.array (Array.map encodeCell row)
+    encodeCell {val, pos} =
+      Encode.object
+      [ ("pos", Encode.list [Encode.int (fst pos), Encode.int (snd pos)])
+      , ("val", cell val)
+      ]
   in
-    Encode.array (Array.map encodeRow grid)
+    Encode.list (List.map encodeCell grid)

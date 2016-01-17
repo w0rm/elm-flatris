@@ -50,16 +50,18 @@ type alias Model =
   , animation : Animation
   , direction : Direction
   , rotation : Rotation
+  , width : Int
+  , height : Int
   }
 
 
 initial : Model
 initial =
-  { active = Grid.empty 0 0
+  { active = Grid.empty
   , position = (0, 0)
-  , grid = Grid.empty 10 20
+  , grid = Grid.empty
   , lines = 0
-  , next = Grid.empty 0 0
+  , next = Grid.empty
   , score = 0
   , seed = Random.initialSeed 0
   , state = Stopped
@@ -67,6 +69,8 @@ initial =
   , animation = Nothing
   , rotation = Nothing
   , direction = Nothing
+  , width = 10
+  , height = 20
   }
 
 

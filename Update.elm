@@ -38,7 +38,7 @@ update action model =
         ( { model
           | seed = seed
           , active = active
-          , position = (Grid.width model.grid // 2 - dx, 0)
+          , position = (model.width // 2 - dx, 0)
           , next = next
           }
         , getFromStorage "elm-flatris"
@@ -50,7 +50,7 @@ update action model =
         | state = Playing
         , lines = 0
         , score = 0
-        , grid = Grid.empty 10 20
+        , grid = Grid.empty
         }
       , Effects.none
       )
@@ -133,7 +133,7 @@ moveTetrimino' dx model =
     (x, y) = model.position
     x' = x + dx
   in
-    if Grid.collide x' (floor y) model.active model.grid then
+    if Grid.collide model.width model.height x' (floor y) model.active model.grid then
       model
     else
       {model | position = (x', y)}
@@ -164,19 +164,15 @@ rotateTetrimino' model =
   let
     (x, y) = model.position
     rotated = Grid.rotate True model.active
-    (xOld, yOld) = Grid.centerOfMass model.active
-    (xNew, yNew) = Grid.centerOfMass rotated
-    newX = x + xOld - xNew
-    newY = y + toFloat (yOld - yNew)
     shiftPosition deltas =
       case deltas of
         dx :: remainingDeltas ->
-          if Grid.collide (newX + dx) (floor newY) rotated model.grid then
+          if Grid.collide model.width model.height (x + dx) (floor y) rotated model.grid then
             shiftPosition remainingDeltas
           else
             { model
             | active = rotated
-            , position = (newX + dx, newY)
+            , position = (x + dx, y)
             }
         [] ->
           model
@@ -203,7 +199,7 @@ dropTetrimino elapsed model =
         max 25 (800 - 25 * toFloat (level model - 1))
     y' = y + elapsed / speed
   in
-    if Grid.collide x (floor y') model.active model.grid then
+    if Grid.collide model.width model.height x (floor y') model.active model.grid then
       let
         score = List.length (Grid.mapToList (\_ _ _ -> True) model.active)
         (next, seed') = Tetriminos.random model.seed
@@ -211,7 +207,7 @@ dropTetrimino elapsed model =
       in
         { model
         | grid = Grid.stamp x (floor y) model.active model.grid
-        , position = (Grid.width model.grid // 2 - dx, 0)
+        , position = (model.width // 2 - dx, 0)
         , active = model.next
         , next = next
         , seed = seed'
@@ -225,7 +221,7 @@ dropTetrimino elapsed model =
 clearLines : Model -> Model
 clearLines model =
   let
-    (grid, lines) = Grid.clearLines model.grid
+    (grid, lines) = Grid.clearLines model.width model.grid
     bonus = case lines of
       0 -> 0
       1 -> 100
