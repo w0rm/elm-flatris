@@ -1,4 +1,4 @@
-module Grid (Grid, decode, encode, fromList, empty, rotate, stamp, collide, mapToList, clearLines, centerOfMass) where
+module Grid (Grid, decode, encode, fromList, empty, rotate, stamp, collide, mapToList, clearLines, initPosition) where
 import Json.Decode as Decode exposing ((:=))
 import Json.Encode as Encode
 
@@ -132,3 +132,12 @@ encode cell grid =
       ]
   in
     Encode.list (List.map encodeCell grid)
+
+
+initPosition : Int -> Grid a -> (Int, Int)
+initPosition wid grid =
+  let
+    (x, _) = centerOfMass grid
+    y = Maybe.withDefault 0 (List.maximum (List.map (snd << .pos) grid))
+  in
+    (wid // 2 - x, -y - 1)

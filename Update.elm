@@ -30,17 +30,9 @@ update action model =
   case action of
     Init time ->
       let
-        initialSeed = Random.initialSeed (floor time)
-        (active, seed') = Tetriminos.random initialSeed
-        (next, seed) = Tetriminos.random seed'
-        (dx, _) = Grid.centerOfMass active
+        (next, seed) = Tetriminos.random (Random.initialSeed (floor time))
       in
-        ( { model
-          | seed = seed
-          , active = active
-          , position = (model.width // 2 - dx, 0)
-          , next = next
-          }
+        ( spawnTetrimino {model | seed = seed, next = next}
         , getFromStorage "elm-flatris"
         )
     Load string ->
@@ -89,7 +81,8 @@ update action model =
       )
     UnlockButtons ->
       ( {model | rotation = Nothing, direction = Nothing, acceleration = False}
-      , Effects.none)
+      , Effects.none
+      )
     Tick time ->
       let
         model =
@@ -116,6 +109,20 @@ animate time model =
     |> rotateTetrimino elapsed
     |> dropTetrimino elapsed
     |> checkEndGame
+
+
+spawnTetrimino : Model -> Model
+spawnTetrimino model =
+  let
+    (next, seed) = Tetriminos.random model.seed
+    (x, y) = Grid.initPosition model.width model.next
+  in
+    { model
+    | next = next
+    , seed = seed
+    , active = model.next
+    , position = (x, toFloat y)
+    }
 
 
 moveTetrimino : Time -> Model -> Model
@@ -182,7 +189,7 @@ rotateTetrimino' model =
 
 checkEndGame : Model -> Model
 checkEndGame model =
-  if List.any identity (Grid.mapToList (\_ (_, y) -> y == 0) model.grid) then
+  if List.any identity (Grid.mapToList (\_ (_, y) -> y < 0) model.grid) then
     {model | state = Stopped}
   else
     model
@@ -202,17 +209,12 @@ dropTetrimino elapsed model =
     if Grid.collide model.width model.height x (floor y') model.active model.grid then
       let
         score = List.length (Grid.mapToList (\_ _ _ -> True) model.active)
-        (next, seed') = Tetriminos.random model.seed
-        (dx, _) = Grid.centerOfMass model.next
       in
         { model
         | grid = Grid.stamp x (floor y) model.active model.grid
-        , position = (model.width // 2 - dx, 0)
-        , active = model.next
-        , next = next
-        , seed = seed'
         , score = model.score + score * (if model.acceleration then 2 else 1)
         }
+        |> spawnTetrimino
         |> clearLines
     else
       {model | position = (x, y')}
