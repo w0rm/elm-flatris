@@ -1,5 +1,7 @@
 module View (view) where
-import Html exposing (div, Html, text, button)
+import Html exposing (div, Html, text, button, fromElement)
+import Graphics.Collage as Collage
+import Color exposing (Color)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick, onMouseDown, onMouseUp, on)
 import Markdown
@@ -23,36 +25,34 @@ onTouchEnd address action =
   on "touchend" Decode.value (\_ -> Signal.message address action)
 
 
-renderBox : (String -> String) -> String -> (Int, Int) -> Html
-renderBox fun c (x, y) =
-  div
-  [ style
-    [ "background" => fun c
-    , "height" => "30px"
-    , "left" => (toString (x * 30) ++ "px")
-    , "position" => "absolute"
-    , "top" => (toString (y * 30) ++ "px")
-    , "width" => "30px"
-    ]
-  ] []
+renderBox : (Float, Float) -> (Color -> Color) -> Color -> (Int, Int) -> Collage.Form
+renderBox (xOff, yOff) fun c (x, y) =
+  Collage.rect 30 30
+  |> Collage.filled (fun c)
+  |> Collage.move ((toFloat x + xOff) * 30, (toFloat y + yOff) * -30)
 
 
-renderWell : Signal.Address Action -> Model -> Html
-renderWell address {width, height, active, grid, position} =
-  div
-  [ style
-    [ "background" => "#ecf0f1"
-    , "height" => (toString (height * 30) ++ "px")
-    , "left" => "0"
-    , "overflow" => "hidden"
-    , "position" => "absolute"
-    , "top" => "0"
-    , "width" => (toString (width * 30) ++ "px")
-    ]
-  ]
-  ( Grid.stamp (fst position) (floor (snd position)) active grid
-    |> Grid.mapToList (renderBox identity)
+renderNext : Grid Color -> Html
+renderNext grid =
+  let
+    (width, height) = Grid.size grid
+  in
+    grid
+    |> Grid.mapToList (renderBox ((1 - toFloat width) / 2, (1 - toFloat height) / 2) (always (Color.rgb 236 240 241)))
+    |> Collage.collage (width * 30) (height * 30)
+    |> fromElement
+
+
+renderWell : Model -> Html
+renderWell {width, height, active, grid, position} =
+  ( Collage.filled (Color.rgb 236 240 241) (Collage.rect (toFloat (width * 30)) (toFloat (height * 30))) ::
+    ( grid
+      |> Grid.stamp (fst position) (floor (snd position)) active
+      |> Grid.mapToList (renderBox ((1 - toFloat width) / 2, (1 - toFloat height) / 2) identity)
+    )
   )
+  |> Collage.collage (width * 30) (height * 30)
+  |> fromElement
 
 
 renderTitle : String -> Html
@@ -153,7 +153,7 @@ renderPanel address {score, lines, next, state} =
       , "position" => "relative"
       ]
     ]
-    (Grid.mapToList (renderBox (always "#ecf0f1")) next)
+    [ renderNext next ]
   , renderGameButton address state
   ]
 
@@ -241,10 +241,11 @@ renderInfo state =
   ] [
     Markdown.toHtml """
 elm-flatris is a [**Flatris**](https://github.com/skidding/flatris)
-clone coded in [**elm**](http://elm-lang.org/) language.
+clone coded in [**Elm**](http://elm-lang.org/) language.
 
 Inspired by the classic [**Tetris**](http://en.wikipedia.org/wiki/Tetris)
-game, the game can be played with a keyboard using the arrow keys.
+game, the game can be played with a keyboard using the arrow keys,
+and on mobile devices using the buttons below.
 
 elm-flatris is open source on
 [**GitHub**](https://github.com/w0rm/elm-flatris).
@@ -267,7 +268,7 @@ view address model =
       , "width" => "480px"
       ]
     ]
-    [ renderWell address model
+    [ renderWell model
     , renderControls address
     , renderPanel address model
     , renderInfo model.state
