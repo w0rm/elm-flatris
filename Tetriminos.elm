@@ -1,16 +1,15 @@
 module Tetriminos (random) where
 import Grid exposing (Grid)
-import Array exposing (Array)
 import Random
 import Color exposing (Color)
 
 random : Random.Seed -> (Grid Color, Random.Seed)
 random seed =
   let
-    (i, seed') = Random.generate (Random.int 0 (List.length tetriminos - 1)) seed
-    tetrimino = Maybe.withDefault Grid.empty (Array.get i (Array.fromList tetriminos))
+    number = Random.int 0 (List.length tetriminos - 1)
+    tetrimino n = Maybe.withDefault Grid.empty (List.head (List.drop n tetriminos))
   in
-    (tetrimino, seed')
+    Random.generate (Random.map tetrimino number) seed
 
 
 tetriminos : List (Grid Color)
