@@ -1,10 +1,10 @@
 {
     "version": "1.0.0",
-    "summary": "A Flatris clone in elm language",
+    "summary": "A Flatris clone in Elm language",
     "repository": "https://github.com/w0rm/elm-flatris.git",
     "license": "MIT",
     "source-directories": [
-        ".",
+        "src",
         "elm-localstorage"
     ],
     "exposed-modules": [],
