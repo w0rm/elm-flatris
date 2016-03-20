@@ -5,6 +5,12 @@ A [Flatris](https://github.com/skidding/flatris) clone in Elm language.
 
 Current demo can be seen [here](http://unsoundscapes.com/elm-flatris.html).
 
+## Features
+
+* works on both desktop and mobile
+* renders the grid to canvas with `Graphics.Collage`
+* preserves the game state in `localStorage`, just try to reload the page while playing!
+
 ## Instructions to run
 
 1. Install elm [elm-lang.org/install](http://elm-lang.org/install)
