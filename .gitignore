@@ -1,3 +1,5 @@
 elm-stuff
 .DS_Store
 elm.js
+node_modules
+package.json

@@ -1,10 +1,9 @@
-module Actions (Action(..)) where
+module Actions exposing (Action(..))
 import Time exposing (Time)
 
 type Action
-  = Init Time
+  = Init
   | Load String
-  | Saved
   | Start
   | Pause
   | Resume
@@ -13,3 +12,4 @@ type Action
   | Move Int
   | Rotate Bool
   | Accelerate Bool
+  | Noop

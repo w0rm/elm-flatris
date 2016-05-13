@@ -1,7 +1,6 @@
-module Update (update) where
+module Update exposing (update)
 import Model exposing (..)
 import Actions exposing (..)
-import Effects exposing (Effects)
 import Tetriminos
 import Time exposing (Time)
 import Grid
@@ -10,33 +9,32 @@ import LocalStorage
 import Task exposing (Task)
 
 
-getFromStorage : String -> Effects Action
+getFromStorage : String -> Cmd Action
 getFromStorage key =
-  LocalStorage.get key `Task.onError` (\_ -> Task.succeed Nothing)
-    |> Task.map (\result -> Load (Maybe.withDefault "" result))
-    |> Effects.task
+  LocalStorage.get key
+    |> Task.perform
+      (always (Load ""))
+      (\v -> Load (Maybe.withDefault "" v))
 
 
-saveToStorage : String -> String -> Effects Action
+saveToStorage : String -> String -> Cmd Action
 saveToStorage key value =
   LocalStorage.set key value
-    |> Task.toMaybe
-    |> Task.map (always Saved)
-    |> Effects.task
+    |> Task.perform (always Noop) (always Noop)
 
 
-update : Action -> Model -> (Model, Effects Action)
+update : Action -> Model -> (Model, Cmd Action)
 update action model =
   case action of
-    Init time ->
+    Init ->
       let
-        (next, seed) = Tetriminos.random (Random.initialSeed (floor time))
+        (next, seed) = Tetriminos.random (Random.initialSeed 0)
       in
         ( spawnTetrimino {model | seed = seed, next = next}
         , getFromStorage "elm-flatris"
         )
     Load string ->
-      (Model.decode string model, Effects.tick Tick)
+      (Model.decode string model, Cmd.none)
     Start ->
       ( { model
         | state = Playing
@@ -44,19 +42,19 @@ update action model =
         , score = 0
         , grid = Grid.empty
         }
-      , Effects.none
+      , Cmd.none
       )
     Pause ->
       ( {model | state = Paused}
-      , Effects.none
+      , Cmd.none
       )
     Resume ->
       ( {model | state = Playing}
-      , Effects.none
+      , Cmd.none
       )
     Move 0 ->
       ( {model | direction = Nothing}
-      , Effects.none
+      , Cmd.none
       )
     Move direction ->
       ( { model
@@ -65,46 +63,33 @@ update action model =
                            , elapsed = 0
                            }
         }
-      , Effects.none
+      , Cmd.none
       )
     Rotate False ->
       ( {model | rotation = Nothing}
-      , Effects.none
+      , Cmd.none
       )
     Rotate True ->
       ( {model | rotation = Just {active = True, elapsed = 0}}
-      , Effects.none
+      , Cmd.none
       )
     Accelerate on ->
       ( {model | acceleration = on}
-      , Effects.none
+      , Cmd.none
       )
     UnlockButtons ->
       ( {model | rotation = Nothing, direction = Nothing, acceleration = False}
-      , Effects.none
+      , Cmd.none
       )
     Tick time ->
-      let
-        model =
-          if model.state == Playing then
-            animate time model
-          else
-            {model | animation = Nothing}
-      in
-        (model, saveToStorage "elm-flatris" (Model.encode 0 model))
-    Saved ->
-      (model, Effects.tick Tick)
+      (animate time model, saveToStorage "elm-flatris" (Model.encode 0 model))
+    Noop ->
+      (model, Cmd.none)
 
 
 animate : Time -> Model -> Model
-animate time model =
-  let
-    elapsed = case model.animation of
-      Nothing -> 0
-      Just {prevClockTime} -> min (time - prevClockTime) 25
-    animation = Just {prevClockTime = time, elapsed = elapsed}
-  in
-    {model | animation = animation}
+animate elapsed model =
+  model
     |> moveTetrimino elapsed
     |> rotateTetrimino elapsed
     |> dropTetrimino elapsed

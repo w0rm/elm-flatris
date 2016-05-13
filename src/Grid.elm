@@ -1,4 +1,4 @@
-module Grid (Grid, decode, encode, fromList, empty, rotate, stamp, collide, mapToList, clearLines, initPosition, size) where
+module Grid exposing (Grid, decode, encode, fromList, empty, rotate, stamp, collide, mapToList, clearLines, initPosition, size)
 import Json.Decode as Decode exposing ((:=))
 import Json.Encode as Encode
 

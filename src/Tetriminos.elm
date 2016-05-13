@@ -1,7 +1,8 @@
-module Tetriminos (random) where
+module Tetriminos exposing (random)
 import Grid exposing (Grid)
 import Random
 import Color exposing (Color)
+
 
 random : Random.Seed -> (Grid Color, Random.Seed)
 random seed =
@@ -9,7 +10,7 @@ random seed =
     number = Random.int 0 (List.length tetriminos - 1)
     tetrimino n = Maybe.withDefault Grid.empty (List.head (List.drop n tetriminos))
   in
-    Random.generate (Random.map tetrimino number) seed
+    Random.step (Random.map tetrimino number) seed
 
 
 tetriminos : List (Grid Color)
