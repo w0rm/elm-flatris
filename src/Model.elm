@@ -26,12 +26,8 @@ encodeState state =
     Stopped -> "stopped"
 
 
-type alias Rotation =
+type alias AnimationState =
   Maybe { active : Bool, elapsed : Time }
-
-
-type alias Direction =
-  Maybe { active : Bool, direction : Int, elapsed : Time }
 
 
 type alias Model =
@@ -44,8 +40,10 @@ type alias Model =
   , seed : Random.Seed
   , state : State
   , acceleration : Bool
-  , direction : Direction
-  , rotation : Rotation
+  , moveLeft : Bool
+  , moveRight : Bool
+  , direction : AnimationState
+  , rotation : AnimationState
   , width : Int
   , height : Int
   }
@@ -62,6 +60,8 @@ initial =
   , seed = Random.initialSeed 0
   , state = Stopped
   , acceleration = False
+  , moveLeft = False
+  , moveRight = False
   , rotation = Nothing
   , direction = Nothing
   , width = 10

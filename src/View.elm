@@ -202,16 +202,16 @@ renderControls =
     , onTouchEnd (Actions.Rotate False)
     ]
   , renderControlButton "←"
-    [ onMouseDown (Actions.Move -1)
-    , onMouseUp (Actions.Move 0)
-    , onTouchStart (Actions.Move -1)
-    , onTouchEnd (Actions.Move 0)
+    [ onMouseDown (Actions.MoveLeft True)
+    , onMouseUp (Actions.MoveLeft False)
+    , onTouchStart (Actions.MoveLeft True)
+    , onTouchEnd (Actions.MoveLeft False)
     ]
   , renderControlButton "→"
-    [ onMouseDown (Actions.Move 1)
-    , onMouseUp (Actions.Move 0)
-    , onTouchStart (Actions.Move 1)
-    , onTouchEnd (Actions.Move 0)
+    [ onMouseDown (Actions.MoveRight True)
+    , onMouseUp (Actions.MoveRight False)
+    , onTouchStart (Actions.MoveRight True)
+    , onTouchEnd (Actions.MoveRight False)
     ]
   , renderControlButton "↓"
     [ onMouseDown (Actions.Accelerate True)

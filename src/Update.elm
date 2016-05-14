@@ -9,18 +9,19 @@ import LocalStorage
 import Task exposing (Task)
 
 
-getFromStorage : String -> Cmd Action
-getFromStorage key =
-  LocalStorage.get key
+getFromStorage : Cmd Action
+getFromStorage =
+  LocalStorage.get "elm-flatris"
     |> Task.perform
       (always (Load ""))
       (\v -> Load (Maybe.withDefault "" v))
 
 
-saveToStorage : String -> String -> Cmd Action
-saveToStorage key value =
-  LocalStorage.set key value
+saveToStorage : Model -> (Model, Cmd Action)
+saveToStorage model =
+  LocalStorage.set "elm-flatris" (Model.encode 0 model)
     |> Task.perform (always Noop) (always Noop)
+    |> (,) model
 
 
 update : Action -> Model -> (Model, Cmd Action)
@@ -31,7 +32,7 @@ update action model =
         (next, seed) = Tetriminos.random (Random.initialSeed 0)
       in
         ( spawnTetrimino {model | seed = seed, next = next}
-        , getFromStorage "elm-flatris"
+        , getFromStorage
         )
     Load string ->
       (Model.decode string model, Cmd.none)
@@ -45,24 +46,17 @@ update action model =
       , Cmd.none
       )
     Pause ->
-      ( {model | state = Paused}
-      , Cmd.none
-      )
+      saveToStorage {model | state = Paused}
     Resume ->
       ( {model | state = Playing}
       , Cmd.none
       )
-    Move 0 ->
-      ( {model | direction = Nothing}
+    MoveLeft on ->
+      ( startMove {model | moveLeft = on}
       , Cmd.none
       )
-    Move direction ->
-      ( { model
-        | direction = Just { active = True
-                           , direction = direction
-                           , elapsed = 0
-                           }
-        }
+    MoveRight on ->
+      ( startMove {model | moveRight = on}
       , Cmd.none
       )
     Rotate False ->
@@ -82,7 +76,9 @@ update action model =
       , Cmd.none
       )
     Tick time ->
-      (animate time model, saveToStorage "elm-flatris" (Model.encode 0 model))
+      model
+        |> animate (min time 25)
+        |> saveToStorage
     Noop ->
       (model, Cmd.none)
 
@@ -110,12 +106,28 @@ spawnTetrimino model =
     }
 
 
+direction : Model -> Int
+direction {moveLeft, moveRight} =
+  case (moveLeft, moveRight) of
+    (True, False) -> -1
+    (False, True) -> 1
+    _ -> 0
+
+
+startMove : Model -> Model
+startMove model =
+  if direction model /= 0 then
+    {model | direction = Just {active = True, elapsed = 0}}
+  else
+    {model | direction = Nothing}
+
+
 moveTetrimino : Time -> Model -> Model
 moveTetrimino elapsed model =
   case model.direction of
     Just state ->
       {model | direction = Just (activateButton 150 elapsed state)}
-      |> (if state.active then moveTetrimino' state.direction else identity)
+      |> (if state.active then moveTetrimino' (direction model) else identity)
     Nothing -> model
 
 

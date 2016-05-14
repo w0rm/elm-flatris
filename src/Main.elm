@@ -15,28 +15,18 @@ subscriptions model =
         AnimationFrame.diffs Actions.Tick
       else
         Sub.none
-    , Keyboard.ups (keyup model)
-    , Keyboard.downs (keydown model)
+    , Keyboard.ups (key False model)
+    , Keyboard.downs (key True model)
     ]
 
 
-keyup : Model -> KeyCode -> Action
-keyup {rotation, direction, acceleration} keycode =
+key : Bool -> Model -> KeyCode -> Action
+key on {rotation, direction, acceleration} keycode =
   case keycode of
-    37 -> Move 0
-    39 -> Move 0
-    40 -> Accelerate False
-    38 -> Rotate False
-    _ -> Noop
-
-
-keydown : Model -> KeyCode -> Action
-keydown {rotation, direction, acceleration} keycode =
-  case keycode of
-    37 -> Move -1
-    39 -> Move 1
-    40 -> Accelerate True
-    38 -> Rotate True
+    37 -> MoveLeft on
+    39 -> MoveRight on
+    40 -> Accelerate on
+    38 -> Rotate on
     _ -> Noop
 
 
