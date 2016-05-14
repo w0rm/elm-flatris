@@ -1,4 +1,4 @@
-module Model (Model, State(..), initial, encode, decode) where
+module Model exposing (Model, State(..), initial, encode, decode)
 
 import Json.Decode as Decode exposing ((:=))
 import Json.Encode as Encode
@@ -26,16 +26,8 @@ encodeState state =
     Stopped -> "stopped"
 
 
-type alias Animation =
-  Maybe { prevClockTime : Time, elapsed : Time }
-
-
-type alias Rotation =
+type alias AnimationState =
   Maybe { active : Bool, elapsed : Time }
-
-
-type alias Direction =
-  Maybe { active : Bool, direction : Int, elapsed : Time }
 
 
 type alias Model =
@@ -48,9 +40,10 @@ type alias Model =
   , seed : Random.Seed
   , state : State
   , acceleration : Bool
-  , animation : Animation
-  , direction : Direction
-  , rotation : Rotation
+  , moveLeft : Bool
+  , moveRight : Bool
+  , direction : AnimationState
+  , rotation : AnimationState
   , width : Int
   , height : Int
   }
@@ -67,7 +60,8 @@ initial =
   , seed = Random.initialSeed 0
   , state = Stopped
   , acceleration = False
-  , animation = Nothing
+  , moveLeft = False
+  , moveRight = False
   , rotation = Nothing
   , direction = Nothing
   , width = 10

@@ -1,6 +1,7 @@
-module View (view) where
-import Html exposing (div, Html, text, button, fromElement)
-import Graphics.Collage as Collage
+module View exposing (view)
+import Html exposing (div, Html, text, button)
+import Collage
+import Element
 import Color exposing (Color)
 import Html.Attributes exposing (style)
 import Html.Events exposing (onClick, onMouseDown, onMouseUp, on)
@@ -8,21 +9,21 @@ import Markdown
 import Model exposing (Model)
 import Actions exposing (Action)
 import Grid exposing (Grid)
-import Json.Decode as Decode
+import Json.Decode as Json
 
 
 (=>) : a -> b -> (a, b)
 (=>) = (,)
 
 
-onTouchStart : Signal.Address a -> a -> Html.Attribute
-onTouchStart address action =
-  on "touchstart" Decode.value (\_ -> Signal.message address action)
+onTouchStart : Action -> Html.Attribute Action
+onTouchStart action =
+  on "touchstart" (Json.succeed action)
 
 
-onTouchEnd : Signal.Address a -> a -> Html.Attribute
-onTouchEnd address action =
-  on "touchend" Decode.value (\_ -> Signal.message address action)
+onTouchEnd : Action -> Html.Attribute Action
+onTouchEnd action =
+  on "touchend" (Json.succeed action)
 
 
 renderBox : (Float, Float) -> (Color -> Color) -> Color -> (Int, Int) -> Collage.Form
@@ -32,7 +33,7 @@ renderBox (xOff, yOff) fun c (x, y) =
   |> Collage.move ((toFloat x + xOff) * 30, (toFloat y + yOff) * -30)
 
 
-renderNext : Grid Color -> Html
+renderNext : Grid Color -> Html Action
 renderNext grid =
   let
     (width, height) = Grid.size grid
@@ -40,10 +41,10 @@ renderNext grid =
     grid
     |> Grid.mapToList (renderBox ((1 - toFloat width) / 2, (1 - toFloat height) / 2) (always (Color.rgb 236 240 241)))
     |> Collage.collage (width * 30) (height * 30)
-    |> fromElement
+    |> Element.toHtml
 
 
-renderWell : Model -> Html
+renderWell : Model -> Html Action
 renderWell {width, height, active, grid, position} =
   ( Collage.filled (Color.rgb 236 240 241) (Collage.rect (toFloat (width * 30)) (toFloat (height * 30))) ::
     ( grid
@@ -52,10 +53,10 @@ renderWell {width, height, active, grid, position} =
     )
   )
   |> Collage.collage (width * 30) (height * 30)
-  |> fromElement
+  |> Element.toHtml
 
 
-renderTitle : String -> Html
+renderTitle : String -> Html Action
 renderTitle txt =
   div
   [ style
@@ -68,7 +69,7 @@ renderTitle txt =
   [ text txt ]
 
 
-renderLabel : String -> Html
+renderLabel : String -> Html Action
 renderLabel txt =
   div
   [ style
@@ -81,7 +82,7 @@ renderLabel txt =
   [ text txt ]
 
 
-renderCount : Int -> Html
+renderCount : Int -> Html Action
 renderCount n =
   div
   [ style
@@ -94,8 +95,8 @@ renderCount n =
   [ text (toString n) ]
 
 
-renderGameButton : Signal.Address Action -> Model.State -> Html
-renderGameButton address state =
+renderGameButton : Model.State -> Html Action
+renderGameButton state =
   let
     (txt, action) = case state of
       Model.Stopped -> ("New game", Actions.Start)
@@ -121,13 +122,13 @@ renderGameButton address state =
       , "position" => "absolute"
       , "width" => "120px"
       ]
-    , onClick address action
+    , onClick action
     ]
     [ text txt ]
 
 
-renderPanel : Signal.Address Action -> Model -> Html
-renderPanel address {score, lines, next, state} =
+renderPanel : Model -> Html Action
+renderPanel {score, lines, next, state} =
   div
   [ style
     [ "bottom" => "80px"
@@ -154,11 +155,11 @@ renderPanel address {score, lines, next, state} =
       ]
     ]
     [ renderNext next ]
-  , renderGameButton address state
+  , renderGameButton state
   ]
 
 
-renderControlButton : String -> List Html.Attribute -> Html
+renderControlButton : String -> List (Html.Attribute Action) -> Html Action
 renderControlButton txt attrs =
   div
   ( style
@@ -184,8 +185,8 @@ renderControlButton txt attrs =
   [ text txt ]
 
 
-renderControls : Signal.Address Action -> Html
-renderControls address =
+renderControls : Html Action
+renderControls =
   div
   [ style
     [ "height" => "80px"
@@ -195,33 +196,33 @@ renderControls address =
     ]
   ]
   [ renderControlButton "↻"
-    [ onMouseDown address (Actions.Rotate True)
-    , onMouseUp address (Actions.Rotate False)
-    , onTouchStart address (Actions.Rotate True)
-    , onTouchEnd address (Actions.Rotate False)
+    [ onMouseDown (Actions.Rotate True)
+    , onMouseUp (Actions.Rotate False)
+    , onTouchStart (Actions.Rotate True)
+    , onTouchEnd (Actions.Rotate False)
     ]
   , renderControlButton "←"
-    [ onMouseDown address (Actions.Move -1)
-    , onMouseUp address (Actions.Move 0)
-    , onTouchStart address (Actions.Move -1)
-    , onTouchEnd address (Actions.Move 0)
+    [ onMouseDown (Actions.MoveLeft True)
+    , onMouseUp (Actions.MoveLeft False)
+    , onTouchStart (Actions.MoveLeft True)
+    , onTouchEnd (Actions.MoveLeft False)
     ]
   , renderControlButton "→"
-    [ onMouseDown address (Actions.Move 1)
-    , onMouseUp address (Actions.Move 0)
-    , onTouchStart address (Actions.Move 1)
-    , onTouchEnd address (Actions.Move 0)
+    [ onMouseDown (Actions.MoveRight True)
+    , onMouseUp (Actions.MoveRight False)
+    , onTouchStart (Actions.MoveRight True)
+    , onTouchEnd (Actions.MoveRight False)
     ]
   , renderControlButton "↓"
-    [ onMouseDown address (Actions.Accelerate True)
-    , onMouseUp address (Actions.Accelerate False)
-    , onTouchStart address (Actions.Accelerate True)
-    , onTouchEnd address (Actions.Accelerate False)
+    [ onMouseDown (Actions.Accelerate True)
+    , onMouseUp (Actions.Accelerate False)
+    , onTouchStart (Actions.Accelerate True)
+    , onTouchEnd (Actions.Accelerate False)
     ]
   ]
 
 
-renderInfo : Model.State -> Html
+renderInfo : Model.State -> Html Action
 renderInfo state =
   div
   [ style
@@ -239,7 +240,7 @@ renderInfo state =
     , "display" => if state == Model.Playing then "none" else "block"
     ]
   ] [
-    Markdown.toHtml """
+    Markdown.toHtml [] """
 elm-flatris is a [**Flatris**](https://github.com/skidding/flatris)
 clone coded in [**Elm**](http://elm-lang.org/) language.
 
@@ -253,12 +254,12 @@ elm-flatris is open source on
   ]
 
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html Action
+view model =
   div
   [ style ["padding" => "30px 0"]
-  , onTouchEnd address Actions.UnlockButtons
-  , onMouseUp address Actions.UnlockButtons
+  , onTouchEnd Actions.UnlockButtons
+  , onMouseUp Actions.UnlockButtons
   ]
   [ div
     [ style
@@ -269,8 +270,8 @@ view address model =
       ]
     ]
     [ renderWell model
-    , renderControls address
-    , renderPanel address model
+    , renderControls
+    , renderPanel model
     , renderInfo model.state
     ]
   ]

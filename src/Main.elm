@@ -1,36 +1,40 @@
-import Effects exposing (Never)
-import Html exposing (Html)
 import Model exposing (Model)
-import StartApp
-import Task exposing (Task)
 import Update
 import View
-import Actions
-import Keyboard
+import Keyboard exposing (KeyCode)
+import Html.App as Html
+import Actions exposing (Action(..))
+import AnimationFrame
+import Task exposing (Task)
 
 
-app : { html : Signal Html
-      , model : Signal Model
-      , tasks : Signal (Task Never ())
-      }
-app =
-  StartApp.start
-    { init = (Model.initial, Effects.tick Actions.Init)
+subscriptions : Model -> Sub Action
+subscriptions model =
+  Sub.batch
+    [ if model.state == Model.Playing then
+        AnimationFrame.diffs Actions.Tick
+      else
+        Sub.none
+    , Keyboard.ups (key False model)
+    , Keyboard.downs (key True model)
+    ]
+
+
+key : Bool -> Model -> KeyCode -> Action
+key on {rotation, direction, acceleration} keycode =
+  case keycode of
+    37 -> MoveLeft on
+    39 -> MoveRight on
+    40 -> Accelerate on
+    38 -> Rotate on
+    _ -> Noop
+
+
+main : Program Never
+main =
+  Html.program
+    { init = (Model.initial, Task.perform (always Init) (always Init) (Task.succeed 0))
     , update = Update.update
     , view = View.view
-    , inputs =
-      [ Signal.map Actions.Rotate (Keyboard.isDown 38)
-      , Signal.map Actions.Accelerate (Keyboard.isDown 40)
-      , Signal.map .x Keyboard.arrows |> Signal.map Actions.Move
-      ]
+    , subscriptions = subscriptions
     }
-
-
-main : Signal Html
-main =
-  app.html
-
-
-port tasks : Signal (Task Never ())
-port tasks =
-  app.tasks
