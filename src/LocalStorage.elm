@@ -17,14 +17,15 @@ limited to string keys and values. It uses Elm Tasks for storage IO.
 -}
 
 import Native.LocalStorage
-import String
 import Maybe
 import Task exposing (Task, andThen, succeed, fail)
 import Json.Decode as Json
 
+
 type Error
-  = NoStorage
-  | UnexpectedPayload String
+    = NoStorage
+    | UnexpectedPayload String
+
 
 {-|
 
@@ -35,7 +36,8 @@ not available in the browser.
 -}
 get : String -> Task Error (Maybe String)
 get =
-  Native.LocalStorage.get
+    Native.LocalStorage.get
+
 
 {-|
 
@@ -47,19 +49,31 @@ UnexpectedPayload if there was a parsing error.
 -}
 getJson : Json.Decoder value -> String -> Task Error (Maybe value)
 getJson decoder key =
-  let decode maybe =
-    case maybe of
-      Just str -> fromJson decoder str
-      Nothing -> succeed Nothing
-  in
-    (get key) `andThen` decode
+    let
+        decode maybe =
+            case maybe of
+                Just str ->
+                    fromJson decoder str
+
+                Nothing ->
+                    succeed Nothing
+    in
+        (get key) |> andThen decode
+
+
 
 -- Decodes json and handles parse errors
+
+
 fromJson : Json.Decoder value -> String -> Task Error (Maybe value)
 fromJson decoder str =
-  case Json.decodeString decoder str of
-    Ok v -> succeed (Just v)
-    Err msg -> fail (UnexpectedPayload msg)
+    case Json.decodeString decoder str of
+        Ok v ->
+            succeed (Just v)
+
+        Err msg ->
+            fail (UnexpectedPayload msg)
+
 
 {-|
 
@@ -70,7 +84,8 @@ not available in the browser.
 -}
 set : String -> String -> Task Error String
 set =
-  Native.LocalStorage.set
+    Native.LocalStorage.set
+
 
 {-|
 
@@ -81,4 +96,4 @@ not available in the browser.
 -}
 remove : String -> Task Error String
 remove key =
-  Native.LocalStorage.remove
+    Native.LocalStorage.remove
