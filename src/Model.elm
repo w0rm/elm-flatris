@@ -7,6 +7,7 @@ import Random
 import Color exposing (Color)
 import Time exposing (Time)
 import Tetriminos
+import Window exposing (Size)
 
 
 type State
@@ -46,7 +47,8 @@ type alias AnimationState =
 
 
 type alias Model =
-    { active : Grid Color
+    { size : Size
+    , active : Grid Color
     , position : ( Int, Float )
     , grid : Grid Color
     , lines : Int
@@ -71,7 +73,8 @@ initial =
             Tetriminos.random (Random.initialSeed 0)
     in
         spawnTetrimino
-            { active = Grid.empty
+            { size = Size 0 0
+            , active = Grid.empty
             , position = ( 0, 0 )
             , grid = Grid.empty
             , lines = 0

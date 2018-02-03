@@ -17,6 +17,9 @@ saveToStorage model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Resize size ->
+            ( { model | size = size }, Cmd.none )
+
         Start ->
             ( { model
                 | state = Playing
