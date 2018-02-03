@@ -1,9 +1,9 @@
 # elm-flatris
 A [Flatris](https://github.com/skidding/flatris) clone in Elm language v0.18.
 
-[![Screenshot](elm-flatris.png)](http://unsoundscapes.com/elm-flatris.html)
+[![Screenshot](elm-flatris.png)](https://unsoundscapes.itch.io/flatris)
 
-Current demo can be seen [here](http://unsoundscapes.com/elm-flatris.html).
+Current demo can be seen [here](https://unsoundscapes.itch.io/flatris).
 
 ## Features
 
