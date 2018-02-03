@@ -1,12 +1,10 @@
-module Actions exposing (Action(..))
+module Messages exposing (Msg(..))
 
 import Time exposing (Time)
 
 
-type Action
-    = Init
-    | Load String
-    | Start
+type Msg
+    = Start
     | Pause
     | Resume
     | Tick Time

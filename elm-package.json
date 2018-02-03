@@ -7,7 +7,7 @@
         "src"
     ],
     "exposed-modules": [],
-    "native-modules": true,
+    "native-modules": false,
     "dependencies": {
         "elm-lang/animation-frame": "1.0.1 <= v < 2.0.0",
         "elm-lang/core": "5.0.0 <= v < 6.0.0",

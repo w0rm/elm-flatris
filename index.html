@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Elm-flatris</title>
+    <meta name="viewport" content="width=480,user-scalable=0">
+    <style>
+        html,
+        head,
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            font-family: sans-serif;
+        }
+
+        a {
+            color: inherit;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="/_compile/src/Main.elm"></script>
+    <script>
+        // Load initial state from localStorage
+        var initialState;
+        try {
+            initialState = JSON.parse(localStorage.getItem('elm-flatris'));
+        } catch (e) {
+
+        }
+
+        var app = Elm.Flatris.fullscreen(initialState);
+        app.ports.save.subscribe(function (state) {
+            // Save game state to localStorage
+            localStorage.setItem('elm-flatris', state)
+        });
+
+        // Prevent scrolling with arrow and space keys
+        window.addEventListener('keydown', function (e) {
+            if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+                e.preventDefault();
+            }
+        }, false);
+
+        // Capture focus
+        window.focus();
+    </script>
+</body>
+
+</html>

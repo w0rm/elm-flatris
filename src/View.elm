@@ -8,7 +8,7 @@ import Html.Attributes exposing (style)
 import Html.Events exposing (onClick, onMouseDown, onMouseUp, on)
 import Markdown
 import Model exposing (Model)
-import Actions exposing (Action)
+import Messages exposing (Msg(..))
 import Grid exposing (Grid)
 import Json.Decode as Json
 
@@ -18,14 +18,14 @@ import Json.Decode as Json
     (,)
 
 
-onTouchStart : Action -> Html.Attribute Action
-onTouchStart action =
-    on "touchstart" (Json.succeed action)
+onTouchStart : Msg -> Html.Attribute Msg
+onTouchStart msg =
+    on "touchstart" (Json.succeed msg)
 
 
-onTouchEnd : Action -> Html.Attribute Action
-onTouchEnd action =
-    on "touchend" (Json.succeed action)
+onTouchEnd : Msg -> Html.Attribute Msg
+onTouchEnd msg =
+    on "touchend" (Json.succeed msg)
 
 
 renderBox : ( Float, Float ) -> (Color -> Color) -> Color -> ( Int, Int ) -> Collage.Form
@@ -35,7 +35,7 @@ renderBox ( xOff, yOff ) fun c ( x, y ) =
         |> Collage.move ( (toFloat x + xOff) * 30, (toFloat y + yOff) * -30 )
 
 
-renderNext : Grid Color -> Html Action
+renderNext : Grid Color -> Html Msg
 renderNext grid =
     let
         ( width, height ) =
@@ -47,7 +47,7 @@ renderNext grid =
             |> Element.toHtml
 
 
-renderWell : Model -> Html Action
+renderWell : Model -> Html Msg
 renderWell { width, height, active, grid, position } =
     (Collage.filled (Color.rgb 236 240 241) (Collage.rect (toFloat (width * 30)) (toFloat (height * 30)))
         :: (grid
@@ -59,7 +59,7 @@ renderWell { width, height, active, grid, position } =
         |> Element.toHtml
 
 
-renderTitle : String -> Html Action
+renderTitle : String -> Html Msg
 renderTitle txt =
     div
         [ style
@@ -72,7 +72,7 @@ renderTitle txt =
         [ text txt ]
 
 
-renderLabel : String -> Html Action
+renderLabel : String -> Html Msg
 renderLabel txt =
     div
         [ style
@@ -85,7 +85,7 @@ renderLabel txt =
         [ text txt ]
 
 
-renderCount : Int -> Html Action
+renderCount : Int -> Html Msg
 renderCount n =
     div
         [ style
@@ -98,19 +98,19 @@ renderCount n =
         [ text (toString n) ]
 
 
-renderGameButton : Model.State -> Html Action
+renderGameButton : Model.State -> Html Msg
 renderGameButton state =
     let
-        ( txt, action ) =
+        ( txt, msg ) =
             case state of
                 Model.Stopped ->
-                    ( "New game", Actions.Start )
+                    ( "New game", Start )
 
                 Model.Playing ->
-                    ( "Pause", Actions.Pause )
+                    ( "Pause", Pause )
 
                 Model.Paused ->
-                    ( "Resume", Actions.Resume )
+                    ( "Resume", Resume )
     in
         button
             [ style
@@ -131,12 +131,12 @@ renderGameButton state =
                 , "position" => "absolute"
                 , "width" => "120px"
                 ]
-            , onClick action
+            , onClick msg
             ]
             [ text txt ]
 
 
-renderPanel : Model -> Html Action
+renderPanel : Model -> Html Msg
 renderPanel { score, lines, next, state } =
     div
         [ style
@@ -168,7 +168,7 @@ renderPanel { score, lines, next, state } =
         ]
 
 
-renderControlButton : String -> List (Html.Attribute Action) -> Html Action
+renderControlButton : String -> List (Html.Attribute Msg) -> Html Msg
 renderControlButton txt attrs =
     div
         (style
@@ -195,7 +195,7 @@ renderControlButton txt attrs =
         [ text txt ]
 
 
-renderControls : Html Action
+renderControls : Html Msg
 renderControls =
     div
         [ style
@@ -206,33 +206,33 @@ renderControls =
             ]
         ]
         [ renderControlButton "↻"
-            [ onMouseDown (Actions.Rotate True)
-            , onMouseUp (Actions.Rotate False)
-            , onTouchStart (Actions.Rotate True)
-            , onTouchEnd (Actions.Rotate False)
+            [ onMouseDown (Rotate True)
+            , onMouseUp (Rotate False)
+            , onTouchStart (Rotate True)
+            , onTouchEnd (Rotate False)
             ]
         , renderControlButton "←"
-            [ onMouseDown (Actions.MoveLeft True)
-            , onMouseUp (Actions.MoveLeft False)
-            , onTouchStart (Actions.MoveLeft True)
-            , onTouchEnd (Actions.MoveLeft False)
+            [ onMouseDown (MoveLeft True)
+            , onMouseUp (MoveLeft False)
+            , onTouchStart (MoveLeft True)
+            , onTouchEnd (MoveLeft False)
             ]
         , renderControlButton "→"
-            [ onMouseDown (Actions.MoveRight True)
-            , onMouseUp (Actions.MoveRight False)
-            , onTouchStart (Actions.MoveRight True)
-            , onTouchEnd (Actions.MoveRight False)
+            [ onMouseDown (MoveRight True)
+            , onMouseUp (MoveRight False)
+            , onTouchStart (MoveRight True)
+            , onTouchEnd (MoveRight False)
             ]
         , renderControlButton "↓"
-            [ onMouseDown (Actions.Accelerate True)
-            , onMouseUp (Actions.Accelerate False)
-            , onTouchStart (Actions.Accelerate True)
-            , onTouchEnd (Actions.Accelerate False)
+            [ onMouseDown (Accelerate True)
+            , onMouseUp (Accelerate False)
+            , onTouchStart (Accelerate True)
+            , onTouchEnd (Accelerate False)
             ]
         ]
 
 
-renderInfo : Model.State -> Html Action
+renderInfo : Model.State -> Html Msg
 renderInfo state =
     div
         [ style
@@ -268,12 +268,12 @@ elm-flatris is open source on
         ]
 
 
-view : Model -> Html Action
+view : Model -> Html Msg
 view model =
     div
         [ style [ "padding" => "30px 0" ]
-        , onTouchEnd Actions.UnlockButtons
-        , onMouseUp Actions.UnlockButtons
+        , onTouchEnd UnlockButtons
+        , onMouseUp UnlockButtons
         ]
         [ div
             [ style
