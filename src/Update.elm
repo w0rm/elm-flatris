@@ -1,51 +1,22 @@
-module Update exposing (update)
+port module Update exposing (update)
 
 import Model exposing (..)
-import Actions exposing (..)
-import Tetriminos
+import Messages exposing (..)
 import Time exposing (Time)
 import Grid
-import Random
-import LocalStorage
-import Task exposing (Task)
 
 
-getFromStorage : Cmd Action
-getFromStorage =
-    LocalStorage.get "elm-flatris"
-        |> Task.attempt
-            (\result ->
-                case result of
-                    Ok v ->
-                        Load (Maybe.withDefault "" v)
-
-                    Err _ ->
-                        Load ""
-            )
+port save : String -> Cmd msg
 
 
-saveToStorage : Model -> ( Model, Cmd Action )
+saveToStorage : Model -> ( Model, Cmd Msg )
 saveToStorage model =
-    LocalStorage.set "elm-flatris" (Model.encode 0 model)
-        |> Task.attempt (always Noop)
-        |> (,) model
+    ( model, save (Model.encode 2 model) )
 
 
-update : Action -> Model -> ( Model, Cmd Action )
-update action model =
-    case action of
-        Init ->
-            let
-                ( next, seed ) =
-                    Tetriminos.random (Random.initialSeed 0)
-            in
-                ( spawnTetrimino { model | seed = seed, next = next }
-                , getFromStorage
-                )
-
-        Load string ->
-            ( Model.decode string model, Cmd.none )
-
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
         Start ->
             ( { model
                 | state = Playing
@@ -110,23 +81,6 @@ animate elapsed model =
         |> rotateTetrimino elapsed
         |> dropTetrimino elapsed
         |> checkEndGame
-
-
-spawnTetrimino : Model -> Model
-spawnTetrimino model =
-    let
-        ( next, seed ) =
-            Tetriminos.random model.seed
-
-        ( x, y ) =
-            Grid.initPosition model.width model.next
-    in
-        { model
-            | next = next
-            , seed = seed
-            , active = model.next
-            , position = ( x, toFloat y )
-        }
 
 
 direction : Model -> Int
@@ -272,7 +226,7 @@ dropTetrimino elapsed model =
                                 1
                               )
                 }
-                    |> spawnTetrimino
+                    |> Model.spawnTetrimino
                     |> clearLines
         else
             { model | position = ( x, y_ ) }

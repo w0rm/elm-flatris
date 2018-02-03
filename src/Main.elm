@@ -1,20 +1,30 @@
-module Main exposing (..)
+module Flatris exposing (main)
 
 import Model exposing (Model)
 import Update
 import View
 import Keyboard exposing (KeyCode)
 import Html
-import Actions exposing (Action(..))
+import Messages exposing (Msg(..))
 import AnimationFrame
-import Task exposing (Task)
+import Json.Encode exposing (Value)
 
 
-subscriptions : Model -> Sub Action
+main : Program Value Model Msg
+main =
+    Html.programWithFlags
+        { init = \value -> ( Model.decode value, Cmd.none )
+        , update = Update.update
+        , view = View.view
+        , subscriptions = subscriptions
+        }
+
+
+subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ if model.state == Model.Playing then
-            AnimationFrame.diffs Actions.Tick
+            AnimationFrame.diffs Messages.Tick
           else
             Sub.none
         , Keyboard.ups (key False model)
@@ -22,7 +32,7 @@ subscriptions model =
         ]
 
 
-key : Bool -> Model -> KeyCode -> Action
+key : Bool -> Model -> KeyCode -> Msg
 key on { rotation, direction, acceleration } keycode =
     case keycode of
         37 ->
@@ -39,13 +49,3 @@ key on { rotation, direction, acceleration } keycode =
 
         _ ->
             Noop
-
-
-main : Program Never Model Action
-main =
-    Html.program
-        { init = ( Model.initial, Task.perform (always Init) (Task.succeed 0) )
-        , update = Update.update
-        , view = View.view
-        , subscriptions = subscriptions
-        }

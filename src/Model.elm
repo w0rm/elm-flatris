@@ -1,4 +1,4 @@
-module Model exposing (Model, State(..), initial, encode, decode)
+module Model exposing (Model, State(..), encode, decode, spawnTetrimino)
 
 import Json.Decode as Decode
 import Json.Encode as Encode
@@ -6,6 +6,7 @@ import Grid exposing (Grid)
 import Random
 import Color exposing (Color)
 import Time exposing (Time)
+import Tetriminos
 
 
 type State
@@ -65,22 +66,44 @@ type alias Model =
 
 initial : Model
 initial =
-    { active = Grid.empty
-    , position = ( 0, 0 )
-    , grid = Grid.empty
-    , lines = 0
-    , next = Grid.empty
-    , score = 0
-    , seed = Random.initialSeed 0
-    , state = Stopped
-    , acceleration = False
-    , moveLeft = False
-    , moveRight = False
-    , rotation = Nothing
-    , direction = Nothing
-    , width = 10
-    , height = 20
-    }
+    let
+        ( next, seed ) =
+            Tetriminos.random (Random.initialSeed 0)
+    in
+        spawnTetrimino
+            { active = Grid.empty
+            , position = ( 0, 0 )
+            , grid = Grid.empty
+            , lines = 0
+            , next = next
+            , score = 0
+            , seed = Random.initialSeed 0
+            , state = Stopped
+            , acceleration = False
+            , moveLeft = False
+            , moveRight = False
+            , rotation = Nothing
+            , direction = Nothing
+            , width = 10
+            , height = 20
+            }
+
+
+spawnTetrimino : Model -> Model
+spawnTetrimino model =
+    let
+        ( next, seed ) =
+            Tetriminos.random model.seed
+
+        ( x, y ) =
+            Grid.initPosition model.width model.next
+    in
+        { model
+            | next = next
+            , seed = seed
+            , active = model.next
+            , position = ( x, toFloat y )
+        }
 
 
 decodeColor : Decode.Decoder Color
@@ -97,25 +120,33 @@ encodeColor color =
         |> \{ red, green, blue } -> Encode.list (List.map Encode.int [ red, green, blue ])
 
 
-decode : String -> Model -> Model
-decode string model =
-    { model
-        | active = Result.withDefault model.active (Decode.decodeString (Decode.field "active" (Grid.decode decodeColor)) string)
-        , position =
-            ( Result.withDefault (Tuple.first model.position) (Decode.decodeString (Decode.field "positionX" Decode.int) string)
-            , Result.withDefault (Tuple.second model.position) (Decode.decodeString (Decode.field "positionY" Decode.float) string)
-            )
-        , grid = Result.withDefault model.grid (Decode.decodeString (Decode.field "grid" (Grid.decode decodeColor)) string)
-        , lines = Result.withDefault model.lines (Decode.decodeString (Decode.field "lines" Decode.int) string)
-        , next = Result.withDefault model.next (Decode.decodeString (Decode.field "next" (Grid.decode decodeColor)) string)
-        , score = Result.withDefault model.score (Decode.decodeString (Decode.field "score" Decode.int) string)
-        , state = Result.withDefault model.state (Decode.decodeString (Decode.field "state" (Decode.map decodeState Decode.string)) string)
-    }
+decode : Encode.Value -> Model
+decode value =
+    Result.withDefault initial (Decode.decodeValue model value)
 
 
-(=>) : a -> b -> ( a, b )
-(=>) =
-    (,)
+model : Decode.Decoder Model
+model =
+    Decode.map8
+        (\active positionX positionY grid lines next score state ->
+            { initial
+                | active = active
+                , position = ( positionX, positionY )
+                , grid = grid
+                , lines = lines
+                , next = next
+                , score = score
+                , state = state
+            }
+        )
+        (Decode.field "active" (Grid.decode decodeColor))
+        (Decode.field "positionX" Decode.int)
+        (Decode.field "positionY" Decode.float)
+        (Decode.field "grid" (Grid.decode decodeColor))
+        (Decode.field "lines" Decode.int)
+        (Decode.field "next" (Grid.decode decodeColor))
+        (Decode.field "score" Decode.int)
+        (Decode.field "state" (Decode.map decodeState Decode.string))
 
 
 encode : Int -> Model -> String
@@ -123,13 +154,13 @@ encode indent model =
     Encode.encode
         indent
         (Encode.object
-            [ "active" => Grid.encode encodeColor model.active
-            , "positionX" => Encode.int (Tuple.first model.position)
-            , "positionY" => Encode.float (Tuple.second model.position)
-            , "grid" => Grid.encode encodeColor model.grid
-            , "lines" => Encode.int model.lines
-            , "next" => Grid.encode encodeColor model.next
-            , "score" => Encode.int model.score
-            , "state" => Encode.string (encodeState model.state)
+            [ ( "active", Grid.encode encodeColor model.active )
+            , ( "positionX", Encode.int (Tuple.first model.position) )
+            , ( "positionY", Encode.float (Tuple.second model.position) )
+            , ( "grid", Grid.encode encodeColor model.grid )
+            , ( "lines", Encode.int model.lines )
+            , ( "next", Grid.encode encodeColor model.next )
+            , ( "score", Encode.int model.score )
+            , ( "state", Encode.string (encodeState model.state) )
             ]
         )
