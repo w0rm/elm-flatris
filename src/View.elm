@@ -13,11 +13,6 @@ import Grid exposing (Grid)
 import Json.Decode as Json
 
 
-(=>) : a -> b -> ( a, b )
-(=>) =
-    (,)
-
-
 onTouchStart : Msg -> Html.Attribute Msg
 onTouchStart msg =
     on "touchstart" (Json.succeed msg)
@@ -63,10 +58,10 @@ renderTitle : String -> Html Msg
 renderTitle txt =
     div
         [ style
-            [ "color" => "#34495f"
-            , "font-size" => "40px"
-            , "line-height" => "60px"
-            , "margin" => "30px 0 0"
+            [ ( "color", "#34495f" )
+            , ( "font-size", "40px" )
+            , ( "line-height", "60px" )
+            , ( "margin", "30px 0 0" )
             ]
         ]
         [ text txt ]
@@ -76,10 +71,10 @@ renderLabel : String -> Html Msg
 renderLabel txt =
     div
         [ style
-            [ "color" => "#bdc3c7"
-            , "font-weight" => "300"
-            , "line-height" => "1"
-            , "margin" => "30px 0 0"
+            [ ( "color", "#bdc3c7" )
+            , ( "font-weight", "300" )
+            , ( "line-height", "1" )
+            , ( "margin", "30px 0 0" )
             ]
         ]
         [ text txt ]
@@ -89,10 +84,10 @@ renderCount : Int -> Html Msg
 renderCount n =
     div
         [ style
-            [ "color" => "#3993d0"
-            , "font-size" => "30px"
-            , "line-height" => "1"
-            , "margin" => "5px 0 0"
+            [ ( "color", "#3993d0" )
+            , ( "font-size", "30px" )
+            , ( "line-height", "1" )
+            , ( "margin", "5px 0 0" )
             ]
         ]
         [ text (toString n) ]
@@ -114,22 +109,22 @@ renderGameButton state =
     in
         button
             [ style
-                [ "background" => "#34495f"
-                , "border" => "0"
-                , "bottom" => "30px"
-                , "color" => "#fff"
-                , "cursor" => "pointer"
-                , "display" => "block"
-                , "font-family" => "Helvetica, Arial, sans-serif"
-                , "font-size" => "18px"
-                , "font-weight" => "300"
-                , "height" => "60px"
-                , "left" => "30px"
-                , "line-height" => "60px"
-                , "outline" => "none"
-                , "padding" => "0"
-                , "position" => "absolute"
-                , "width" => "120px"
+                [ ( "background", "#34495f" )
+                , ( "border", "0" )
+                , ( "bottom", "30px" )
+                , ( "color", "#fff" )
+                , ( "cursor", "pointer" )
+                , ( "display", "block" )
+                , ( "font-family", "Helvetica, Arial, sans-serif" )
+                , ( "font-size", "18px" )
+                , ( "font-weight", "300" )
+                , ( "height", "60px" )
+                , ( "left", "30px" )
+                , ( "line-height", "60px" )
+                , ( "outline", "none" )
+                , ( "padding", "0" )
+                , ( "position", "absolute" )
+                , ( "width", "120px" )
                 ]
             , onClick msg
             ]
@@ -140,15 +135,15 @@ renderPanel : Model -> Html Msg
 renderPanel { score, lines, next, state } =
     div
         [ style
-            [ "bottom" => "80px"
-            , "color" => "#34495f"
-            , "font-family" => "Helvetica, Arial, sans-serif"
-            , "font-size" => "14px"
-            , "left" => "300px"
-            , "padding" => "0 30px"
-            , "position" => "absolute"
-            , "right" => "0"
-            , "top" => "0"
+            [ ( "bottom", "80px" )
+            , ( "color", "#34495f" )
+            , ( "font-family", "Helvetica, Arial, sans-serif" )
+            , ( "font-size", "14px" )
+            , ( "left", "300px" )
+            , ( "padding", "0 30px" )
+            , ( "position", "absolute" )
+            , ( "right", "0" )
+            , ( "top", "0" )
             ]
         ]
         [ renderTitle "Flatris"
@@ -159,8 +154,8 @@ renderPanel { score, lines, next, state } =
         , renderLabel "Next Shape"
         , div
             [ style
-                [ "margin-top" => "10px"
-                , "position" => "relative"
+                [ ( "margin-top", "10px" )
+                , ( "position", "relative" )
                 ]
             ]
             [ renderNext next ]
@@ -172,23 +167,23 @@ renderControlButton : String -> List (Html.Attribute Msg) -> Html Msg
 renderControlButton txt attrs =
     div
         (style
-            [ "background" => "#ecf0f1"
-            , "border" => "0"
-            , "color" => "#34495f"
-            , "cursor" => "pointer"
-            , "text-align" => "center"
-            , "-webkit-user-select" => "none"
-            , "display" => "block"
-            , "float" => "left"
-            , "font-family" => "Helvetica, Arial, sans-serif"
-            , "font-size" => "24px"
-            , "font-weight" => "300"
-            , "height" => "60px"
-            , "line-height" => "60px"
-            , "margin" => "20px 20px 0 0"
-            , "outline" => "none"
-            , "padding" => "0"
-            , "width" => "60px"
+            [ ( "background", "#ecf0f1" )
+            , ( "border", "0" )
+            , ( "color", "#34495f" )
+            , ( "cursor", "pointer" )
+            , ( "text-align", "center" )
+            , ( "-webkit-user-select", "none" )
+            , ( "display", "block" )
+            , ( "float", "left" )
+            , ( "font-family", "Helvetica, Arial, sans-serif" )
+            , ( "font-size", "24px" )
+            , ( "font-weight", "300" )
+            , ( "height", "60px" )
+            , ( "line-height", "60px" )
+            , ( "margin", "20px 20px 0 0" )
+            , ( "outline", "none" )
+            , ( "padding", "0" )
+            , ( "width", "60px" )
             ]
             :: attrs
         )
@@ -199,10 +194,10 @@ renderControls : Html Msg
 renderControls =
     div
         [ style
-            [ "height" => "80px"
-            , "left" => "0"
-            , "position" => "absolute"
-            , "top" => "600px"
+            [ ( "height", "80px" )
+            , ( "left", "0" )
+            , ( "position", "absolute" )
+            , ( "top", "600px" )
             ]
         ]
         [ renderControlButton "↻"
@@ -236,22 +231,23 @@ renderInfo : Model.State -> Html Msg
 renderInfo state =
     div
         [ style
-            [ "background" => "rgba(236, 240, 241, 0.85)"
-            , "color" => "#34495f"
-            , "font-family" => "Helvetica, Arial, sans-serif"
-            , "font-size" => "18px"
-            , "height" => "600px"
-            , "left" => "0"
-            , "line-height" => "1.5"
-            , "padding" => "0 15px"
-            , "position" => "absolute"
-            , "top" => "0"
-            , "width" => "270px"
-            , "display"
-                => if state == Model.Playing then
+            [ ( "background", "rgba(236, 240, 241, 0.85)" )
+            , ( "color", "#34495f" )
+            , ( "font-family", "Helvetica, Arial, sans-serif" )
+            , ( "font-size", "18px" )
+            , ( "height", "600px" )
+            , ( "left", "0" )
+            , ( "line-height", "1.5" )
+            , ( "padding", "0 15px" )
+            , ( "position", "absolute" )
+            , ( "top", "0" )
+            , ( "width", "270px" )
+            , ( "display"
+              , if state == Model.Playing then
                     "none"
-                   else
+                else
                     "block"
+              )
             ]
         ]
         [ Markdown.toHtml [] """
@@ -268,24 +264,54 @@ elm-flatris is open source on
         ]
 
 
+pixelWidth : Float
+pixelWidth =
+    480
+
+
+pixelHeight : Float
+pixelHeight =
+    680
+
+
 view : Model -> Html Msg
 view model =
-    div
-        [ style [ "padding" => "30px 0" ]
-        , onTouchEnd UnlockButtons
-        , onMouseUp UnlockButtons
-        ]
-        [ div
-            [ style
-                [ "height" => "680px"
-                , "margin" => "auto"
-                , "position" => "relative"
-                , "width" => "480px"
+    let
+        w =
+            toFloat model.size.width
+
+        h =
+            toFloat model.size.height
+
+        r =
+            if w / h > pixelWidth / pixelHeight then
+                min 1 (h / pixelHeight)
+            else
+                min 1 (w / pixelWidth)
+    in
+        div
+            [ onTouchEnd UnlockButtons
+            , onMouseUp UnlockButtons
+            , style
+                [ ( "width", "100%" )
+                , ( "height", "100%" )
+                , ( "position", "relative" )
                 ]
             ]
-            [ renderWell model
-            , renderControls
-            , renderPanel model
-            , renderInfo model.state
+            [ div
+                [ style
+                    [ ( "width", toString pixelWidth ++ "px" )
+                    , ( "height", toString pixelHeight ++ "px" )
+                    , ( "position", "absolute" )
+                    , ( "left", toString ((w - pixelWidth * r) / 2) ++ "px" )
+                    , ( "top", toString ((h - pixelHeight * r) / 2) ++ "px" )
+                    , ( "transform-origin", "0 0" )
+                    , ( "transform", "scale(" ++ toString r ++ ")" )
+                    ]
+                ]
+                [ renderWell model
+                , renderControls
+                , renderPanel model
+                , renderInfo model.state
+                ]
             ]
-        ]

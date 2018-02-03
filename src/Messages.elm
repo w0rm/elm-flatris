@@ -1,6 +1,7 @@
 module Messages exposing (Msg(..))
 
 import Time exposing (Time)
+import Window exposing (Size)
 
 
 type Msg
@@ -13,4 +14,5 @@ type Msg
     | MoveRight Bool
     | Rotate Bool
     | Accelerate Bool
+    | Resize Size
     | Noop
