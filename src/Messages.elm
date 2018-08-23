@@ -1,18 +1,18 @@
 module Messages exposing (Msg(..))
 
-import Time exposing (Time)
-import Window exposing (Size)
+import Browser.Dom exposing (Viewport)
 
 
 type Msg
     = Start
     | Pause
     | Resume
-    | Tick Time
+    | Tick Float
     | UnlockButtons
     | MoveLeft Bool
     | MoveRight Bool
     | Rotate Bool
     | Accelerate Bool
-    | Resize Size
+    | Resize Int Int
+    | GetViewport Viewport
     | Noop

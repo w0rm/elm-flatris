@@ -32,7 +32,8 @@
 </head>
 
 <body>
-    <script src="/_compile/src/Main.elm"></script>
+    <div id="elm"></div>
+    <script src="elm.js"></script>
     <script>
         // Load initial state from localStorage
         var initialState;
@@ -42,7 +43,10 @@
 
         }
 
-        var app = Elm.Flatris.fullscreen(initialState);
+        var app = Elm.Flatris.init({
+            node: document.getElementById('elm'),
+            flags: initialState
+        });
         app.ports.save.subscribe(function (state) {
             // Save game state to localStorage
             localStorage.setItem('elm-flatris', state)
