@@ -5,13 +5,16 @@ rm -rf dest || exit 0;
 
 mkdir -p dest
 
-# compile JS using Elm and minify with uglify
-elm make src/Main.elm --yes --output dest/assets/elm.js
-uglifyjs dest/assets/elm.js -c warnings=false -m --screw-ie8 -o dest/assets/elm.min.js
-rm dest/assets/elm.js
+# compile JS using Elm
+elm make src/Main.elm --optimize --output dest/elm-temp.js
 
-# replace elm.js from debug to prod
-sed 's/\/_compile\/src\/Main\.elm/assets\/elm\.min\.js/g' index.html > dest/index.html
+# minify with uglifyjs
+uglifyjs dest/elm-temp.js --compress 'pure_funcs="F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9",pure_getters,keep_fargs=false,unsafe_comps,unsafe' | uglifyjs --mangle --output=dest/elm.js
+
+rm dest/elm-temp.js
+
+# copy the html
+cp -R index.html dest
 
 # publish to itch.io
 ./butler push dest unsoundscapes/flatris:html

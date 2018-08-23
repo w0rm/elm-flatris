@@ -1,21 +1,29 @@
 module Flatris exposing (main)
 
+import Browser
+import Browser.Dom exposing (Viewport, getViewport)
+import Browser.Events exposing (onAnimationFrameDelta, onKeyDown, onKeyUp, onResize)
+import Html
+import Html.Events exposing (keyCode)
+import Json.Decode as Decode
+import Json.Encode exposing (Value)
+import Messages exposing (Msg(..))
 import Model exposing (Model)
+import Task
 import Update
 import View
-import Keyboard exposing (KeyCode)
-import Window exposing (Size)
-import Html
-import Messages exposing (Msg(..))
-import AnimationFrame
-import Json.Encode exposing (Value)
-import Task
 
 
 main : Program Value Model Msg
 main =
-    Html.programWithFlags
-        { init = \value -> ( Model.decode value, Task.perform Resize Window.size )
+    Browser.element
+        { init =
+            \value ->
+                ( value
+                    |> Decode.decodeValue Model.decode
+                    |> Result.withDefault Model.initial
+                , Task.perform GetViewport getViewport
+                )
         , update = Update.update
         , view = View.view
         , subscriptions = subscriptions
@@ -26,17 +34,18 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ if model.state == Model.Playing then
-            AnimationFrame.diffs Tick
+            onAnimationFrameDelta Tick
+
           else
             Sub.none
-        , Keyboard.ups (key False model)
-        , Keyboard.downs (key True model)
-        , Window.resizes Resize
+        , onKeyUp (Decode.map (key False) keyCode)
+        , onKeyDown (Decode.map (key True) keyCode)
+        , onResize Resize
         ]
 
 
-key : Bool -> Model -> KeyCode -> Msg
-key on { rotation, direction, acceleration } keycode =
+key : Bool -> Int -> Msg
+key on keycode =
     case keycode of
         37 ->
             MoveLeft on
