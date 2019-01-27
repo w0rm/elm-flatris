@@ -1,5 +1,5 @@
 # Elm Flatris
-A [Flatris](https://github.com/skidding/flatris) clone in Elm language v0.18.
+A [Flatris](https://github.com/skidding/flatris) clone in Elm.
 
 [![Screenshot](elm-flatris.png)](https://unsoundscapes.itch.io/flatris)
 
